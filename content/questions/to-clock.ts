@@ -1,0 +1,297 @@
+import type { Question } from '../types'
+
+/** クロック操作（タイマー・ショットクロックオペレーター） */
+export const toClockQuestions: Question[] = [
+  {
+    id: 'tc-001',
+    domain: 'to-clock',
+    roles: ['timer', 'sc-operator'],
+    ruleset: 'both',
+    difficulty: 1,
+    type: 'single',
+    prompt:
+      'スローインでゲームが再開される。タイマーがゲームクロックを動かし始めるのはいつ？',
+    choices: [
+      'スローインするプレーヤーにボールが与えられたとき',
+      'スローインされたボールにコート上のプレーヤーが触れたとき',
+      '審判が笛を鳴らしたとき',
+      'ボールがコートのライン内に入ったとき',
+    ],
+    answer: 1,
+    explanation:
+      'ゲームクロックは「コート上のプレーヤーがボールに触れた（触れられた）とき」にスタートする。スローインするプレーヤーに与えられた瞬間はボールがライブになるだけで、まだクロックは動かさない。ショットクロックも同じ瞬間にスタートする。',
+    refs: ['JBA TOマニュアル 第6章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-002',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'both',
+    difficulty: 1,
+    type: 'single',
+    prompt: 'ゲーム開始のジャンプボール。ゲームクロックをスタートさせるのはいつ？',
+    choices: [
+      '審判がボールをトスした瞬間',
+      'ジャンパーが正当にボールをタップしたとき',
+      'タップされたボールを誰かが保持したとき',
+    ],
+    answer: 1,
+    explanation:
+      'ジャンプボールでは、ジャンパーが正当にボールをタップした瞬間にゲームクロックをスタートする。ショットクロックはこの瞬間ではなく、どちらかのチームがコントロールを得てからスタートする点が異なる。',
+    refs: ['JBA TOマニュアル 第6章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-003',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'both',
+    difficulty: 2,
+    type: 'single',
+    prompt:
+      '最後のフリースローが不成功でボールはライブ。ゲームクロックをスタートさせるのはいつ？',
+    choices: [
+      'ボールがリングに触れたとき',
+      'リングで弾んだボールにコート上のプレーヤーが触れたとき',
+      '審判が笛を鳴らしたとき',
+    ],
+    answer: 1,
+    explanation:
+      '最後のFTが不成功でボールがライブのときは、リングで弾んだボールにコート上のプレーヤーが触れた瞬間にスタートする。リングに当たっただけではまだ動かさない。',
+    refs: ['JBA TOマニュアル 第6章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-004',
+    domain: 'to-clock',
+    roles: ['timer', 'sc-operator'],
+    ruleset: 'both',
+    difficulty: 1,
+    type: 'truefalse',
+    prompt:
+      'プレーヤーがボールに触れた瞬間がテーブルから確認できないときは、審判の「手を振り下ろす」シグナルに合わせてクロックをスタートしてよい。',
+    answer: true,
+    explanation:
+      '触れた瞬間が確認できないときは、審判が手を振り下ろすシグナルがスタートの合図になる。審判のシグナルは常に確認する習慣をつける。',
+    refs: ['JBA TOマニュアル 第6章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-005',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'u12',
+    difficulty: 1,
+    type: 'single',
+    prompt: 'U12のタイムアウトの長さと、ブザーを鳴らすタイミングは？',
+    choices: [
+      '60秒。50秒経過時と60秒経過時にブザー',
+      '45秒。35秒経過時と45秒経過時にブザー',
+      '45秒。30秒経過時と45秒経過時にブザー',
+      '60秒。45秒経過時と60秒経過時にブザー',
+    ],
+    answer: 1,
+    explanation:
+      'U12のタイムアウトは45秒で、35秒経過時と45秒経過時にブザーを鳴らす。一般は60秒（50秒・60秒でブザー）。',
+    refs: ['U12適用規則 第18条', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-006',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'both',
+    difficulty: 2,
+    type: 'single',
+    prompt: 'タイムアウトの計測を始める起点はどれ？',
+    choices: [
+      'スコアラーがブザーを鳴らしたとき',
+      'HCがタイムアウトを請求したとき',
+      '審判が笛を鳴らしてタイムアウトのシグナルを示したとき',
+      '両チームがベンチに入ったとき',
+    ],
+    answer: 2,
+    explanation:
+      'タイムアウトの計測は「審判が笛を鳴らしてタイムアウトのシグナルを示したとき」から。スコアラーのブザーが起点ではない。計測はゲームクロックとは別のストップウォッチで行う。',
+    refs: ['JBA TOマニュアル 第6章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-007',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'u12',
+    difficulty: 2,
+    type: 'single',
+    prompt: 'U12のQ1-Q2間・Q3-Q4間のインターバルの長さとブザーは？',
+    choices: [
+      '2分。終了30秒前にブザー',
+      '1分。終了30秒前にブザー',
+      '1分。途中のブザーなし、終了時のみ',
+      '2分。終了1分前にブザー',
+    ],
+    answer: 2,
+    explanation:
+      'U12のクォーター間インターバルは1分で、途中のブザーはなく終了時のみ鳴らす。一般は2分で終了30秒前にブザー。終了したらゲームクロックを次のQの時間（U12は6:00）にリセットする。',
+    refs: ['U12適用規則 第8条', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-008',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'u12',
+    difficulty: 2,
+    type: 'single',
+    prompt: 'U12のハーフタイムの長さと、ブザーを鳴らすタイミングは？',
+    choices: [
+      '10分。終了3分前と1分30秒前にブザー',
+      '5分。終了3分前と1分前にブザー',
+      '5分。終了1分前のみブザー',
+      '15分。終了3分前と1分30秒前にブザー',
+    ],
+    answer: 1,
+    explanation:
+      'U12のハーフタイムは5分で、終了3分前と1分前にブザーを鳴らす。一般の国内推奨は10分（3分前・1分30秒前にブザー）。',
+    refs: ['U12適用規則 第8条', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-009',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'u12',
+    difficulty: 2,
+    type: 'truefalse',
+    prompt:
+      'U12のゲームでも、第4Q残り2分以下はフィールドゴール成功のたびにゲームクロックを止める。',
+    answer: false,
+    explanation:
+      '「第4Q・OT残り2:00以下でゴール後にクロックを止める」のは一般ルールで、U12には適用されない。U12ではゴール後もクロックは流れ続ける（審判が中断した場合を除く）。',
+    refs: ['U12適用規則（規定しない項目）', 'knowledge/04-minibasket-diff'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-010',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'both',
+    difficulty: 3,
+    type: 'single',
+    prompt:
+      '白チームがタイムアウトを請求して待っている。相手の赤チームがフィールドゴールで得点した。タイマーはどうする？',
+    choices: [
+      '何もしない（クロックは流れたまま）',
+      '速やかにゲームクロックを止め、ブザーを鳴らす',
+      '審判が笛を鳴らすまで待つ',
+    ],
+    answer: 1,
+    explanation:
+      'タイムアウトを請求しているチームの相手がフィールドゴールで得点したときは、タイマーが速やかにクロックを止めてブザーを鳴らす場面。得点されたチームだけがタイムアウトを取れるタイミングであり、クルーで「入ったら白のタイムアウト」と事前共有しておくのが実務のコツ。',
+    refs: ['JBA TOマニュアル 第6章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-011',
+    domain: 'to-clock',
+    roles: ['timer'],
+    ruleset: 'both',
+    difficulty: 2,
+    type: 'truefalse',
+    prompt:
+      'ショットクロックのブザーが鳴ったら、タイマーは審判の笛を待たずにすぐゲームクロックを止める。',
+    answer: false,
+    explanation:
+      'ショットクロックのブザー後にゲームクロックを止めるのは「審判が笛を鳴らしたとき」。相手チームが速やかに明らかなコントロールを得た場合、審判は笛を鳴らさずゲームは続く（ブザーは無視される）ので、笛がなければ止めない。',
+    refs: ['JBA TOマニュアル 第6章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-012',
+    domain: 'to-clock',
+    roles: ['sc-operator'],
+    ruleset: 'both',
+    difficulty: 2,
+    type: 'truefalse',
+    prompt:
+      'ディフェンスが片手でボールをタップした（はじいた）だけでも、コントロールが変わったのでショットクロックはリセットする。',
+    answer: false,
+    explanation:
+      '触れただけ・はじいただけではコントロールは変わらない。ディフェンスが両手で保持または片手で保持したときに初めてコントロールが移り、24秒にリセットする。ショットクロックは「チームコントロール」とともに動くのが大原則。',
+    refs: ['JBA TOマニュアル 第7章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-013',
+    domain: 'to-clock',
+    roles: ['sc-operator'],
+    ruleset: 'both',
+    difficulty: 1,
+    type: 'single',
+    prompt:
+      'ショットがリングに当たって不成功。こぼれ球を攻撃していたチーム自身がリバウンドした。ショットクロックは？',
+    choices: ['24秒にリセット', '14秒にリセット', '継続（リセットしない）'],
+    answer: 1,
+    explanation:
+      'ボールがリングに触れて不成功となり、攻撃していたチームが再びコントロールしたときは14秒にリセットする（U12・一般共通）。相手チームがリバウンドしたときは24秒。',
+    refs: ['U12適用規則 第29条', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-014',
+    domain: 'to-clock',
+    roles: ['sc-operator'],
+    ruleset: 'u12',
+    difficulty: 2,
+    type: 'single',
+    prompt:
+      'U12のゲーム。チームAの攻撃中（ショットクロック残り9秒）に、チームBがキックボールのバイオレーション。チームAのスローインで再開する。ショットクロックは？',
+    choices: ['継続（9秒のまま）', '14秒にリセット', '24秒にリセット'],
+    answer: 2,
+    explanation:
+      'U12にはフロントコート／バックコートの概念がないため、相手のファウル・バイオレーション後のスローインは常に24秒リセット。一般ならフロントコートで残り13秒以下→14秒だが、この規定はU12に存在しない。',
+    refs: ['U12適用規則 第29条', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-015',
+    domain: 'to-clock',
+    roles: ['sc-operator'],
+    ruleset: 'both',
+    difficulty: 3,
+    type: 'single',
+    prompt:
+      '攻撃側チームにテクニカルファウルが宣せられ、相手にフリースロー1本が与えられた。FTの間、ショットクロックは？',
+    choices: [
+      '24秒にリセットする',
+      '14秒にリセットする',
+      '残り秒数を表示したまま継続（FT後は残りから再開）',
+    ],
+    answer: 2,
+    explanation:
+      'コントロールしているチーム側のテクニカルファウルでは、ショットクロックはリセットせず残り秒数のまま。罰則のFTが終わったら元の残り秒数から再開する。「FTがあれば必ず24にリセット」ではない点に注意。',
+    refs: ['JBA TOマニュアル 第7章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+  {
+    id: 'tc-016',
+    domain: 'to-clock',
+    roles: ['sc-operator'],
+    ruleset: 'both',
+    difficulty: 3,
+    type: 'single',
+    prompt:
+      'Q終了間際、ゲームクロックの残りが14秒未満になった。ここでショットクロックのリセット場面が生じたら、表示はどうする？',
+    choices: [
+      '24秒を表示してスタート',
+      '14秒を表示してスタート',
+      '競技時間の終了まで非表示のまま（消せない機材は24を表示して止めておく）',
+    ],
+    answer: 2,
+    explanation:
+      'ゲームクロック残りが14秒未満では、もうショットクロックのバイオレーションは起こり得ないため、リセット場面が生じても競技時間終了まで非表示のままにする。非表示にできない機材では24を表示しておく。',
+    refs: ['JBA TOマニュアル 第7章', 'knowledge/09-to-timer-shotclock'],
+    ruleYear: 2026,
+  },
+]

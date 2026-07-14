@@ -1,0 +1,36 @@
+{
+  "name": "minibas-ref-quest",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run validate-content && tsc -b && vite build",
+    "lint": "oxlint",
+    "test": "vitest run",
+    "validate-content": "tsx scripts/validate-content.ts",
+    "preview": "vite preview",
+    "deploy": "npm run build && cd dist && git init -q -b gh-pages && git add -A && git commit -q -m deploy && git push -f https://github.com/GennyBoy/minibas-ref-quest.git gh-pages && rm -rf .git"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "wouter": "^3.10.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "oxlint": "^1.71.0",
+    "tailwindcss": "^4.3.2",
+    "tsx": "^4.23.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^3.2.7"
+  }
+}
