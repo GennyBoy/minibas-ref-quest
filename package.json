@@ -9,10 +9,12 @@
     "lint": "oxlint",
     "test": "vitest run",
     "validate-content": "tsx scripts/validate-content.ts",
+    "sync-knowledge": "tsx scripts/sync-knowledge.ts",
     "preview": "vite preview",
     "deploy": "npm run build && cd dist && git init -q -b gh-pages && git add -A && git commit -q -m deploy && git push -f https://github.com/GennyBoy/minibas-ref-quest.git gh-pages && rm -rf .git"
   },
   "dependencies": {
+    "marked": "^18.0.6",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "wouter": "^3.10.0",

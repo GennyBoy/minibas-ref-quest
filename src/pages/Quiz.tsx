@@ -10,6 +10,7 @@ import {
 import { useProgress } from '../stores/progress'
 import { useSettings } from '../stores/settings'
 import { questionPool } from '../features/quiz/pool'
+import { chapterBySlug } from '../features/rules/chapters'
 import { buildSession } from '../lib/session'
 import { isDue } from '../lib/srs'
 import { questionXp, COMBO_BONUS } from '../lib/xp'
@@ -23,6 +24,29 @@ interface AnswerResult {
   question: Question
   correct: boolean
   xpGained: number
+}
+
+type ChoiceState = 'idle' | 'correct' | 'wrongPick' | 'dimmed'
+
+function choiceState(showFeedback: boolean, isAnswer: boolean, isPicked: boolean): ChoiceState {
+  if (!showFeedback) return 'idle'
+  if (isAnswer) return 'correct'
+  if (isPicked) return 'wrongPick'
+  return 'dimmed'
+}
+
+const CHOICE_STYLES: Record<ChoiceState, string> = {
+  idle: 'bg-white text-slate-700',
+  correct: 'bg-emerald-500 text-white animate-quiz-pop',
+  wrongPick: 'bg-rose-500 text-white animate-quiz-shake',
+  dimmed: 'bg-white text-slate-400 opacity-40',
+}
+
+const CHOICE_BADGES: Record<ChoiceState, string | null> = {
+  idle: null,
+  correct: '正解',
+  wrongPick: 'あなたの回答',
+  dimmed: null,
 }
 
 export default function Quiz() {
@@ -222,43 +246,45 @@ function QuizSession({
       <div className="space-y-2.5">
         {q.type === 'single' &&
           q.choices.map((choice, i) => {
-            let style = 'bg-white text-slate-700'
-            if (showFeedback) {
-              if (i === q.answer) style = 'bg-emerald-500 text-white'
-              else if (lastChoice === i) style = 'bg-rose-400 text-white'
-              else style = 'bg-white text-slate-400'
-            }
+            const state = choiceState(showFeedback, i === q.answer, lastChoice === i)
             return (
               <button
                 key={i}
                 type="button"
                 disabled={showFeedback}
                 onClick={() => handleAnswer(i)}
-                className={`block min-h-12 w-full rounded-2xl p-3.5 text-left text-sm font-medium shadow-sm transition-colors active:scale-[0.99] ${style}`}
+                className={`flex min-h-12 w-full items-center gap-2 rounded-2xl p-3.5 text-left text-sm font-medium shadow-sm transition active:scale-[0.99] ${CHOICE_STYLES[state]}`}
               >
-                {choice}
+                {state === 'correct' && <span aria-hidden="true" className="font-black">✓</span>}
+                {state === 'wrongPick' && <span aria-hidden="true" className="font-black">✗</span>}
+                <span className="flex-1">{choice}</span>
+                {CHOICE_BADGES[state] && (
+                  <span className="shrink-0 rounded-full bg-white/25 px-2 py-0.5 text-[11px] font-bold">
+                    {CHOICE_BADGES[state]}
+                  </span>
+                )}
               </button>
             )
           })}
         {q.type === 'truefalse' && (
           <div className="grid grid-cols-2 gap-2.5">
             {([true, false] as const).map((v) => {
-              let style = 'bg-white text-slate-700'
-              if (showFeedback) {
-                if (v === q.answer) style = 'bg-emerald-500 text-white'
-                else if (lastChoice === v) style = 'bg-rose-400 text-white'
-                else style = 'bg-white text-slate-400'
-              }
+              const state = choiceState(showFeedback, v === q.answer, lastChoice === v)
               return (
                 <button
                   key={String(v)}
                   type="button"
                   disabled={showFeedback}
                   onClick={() => handleAnswer(v)}
-                  className={`min-h-16 rounded-2xl p-3 text-center shadow-sm transition-colors active:scale-[0.99] ${style}`}
+                  className={`min-h-16 rounded-2xl p-3 text-center shadow-sm transition active:scale-[0.99] ${CHOICE_STYLES[state]}`}
                 >
                   <span className="block text-2xl font-black">{v ? '○' : '×'}</span>
                   <span className="text-xs">{v ? '正しい' : '間違い'}</span>
+                  {CHOICE_BADGES[state] && (
+                    <span className="mx-auto mt-1 block w-fit rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold">
+                      {CHOICE_BADGES[state]}
+                    </span>
+                  )}
                 </button>
               )
             })}
@@ -281,7 +307,28 @@ function QuizSession({
             <span className="text-sm font-bold text-emerald-600">+{result.xpGained} XP</span>
           </div>
           <p className="mt-2 text-sm leading-relaxed text-slate-700">{q.explanation}</p>
-          <p className="mt-2 text-[11px] text-slate-400">根拠: {q.refs.join('、')}</p>
+          <p className="mt-2 text-[11px] text-slate-400">
+            根拠:{' '}
+            {q.refs.map((ref, i) => {
+              const slug = ref.match(/^knowledge\/(.+)$/)?.[1]
+              const chapter = slug ? chapterBySlug.get(slug) : undefined
+              return (
+                <span key={ref}>
+                  {i > 0 && '、'}
+                  {chapter ? (
+                    <Link
+                      href={`/rules/${chapter.slug}`}
+                      className="font-bold text-orange-600 underline underline-offset-2"
+                    >
+                      📖 {chapter.title}
+                    </Link>
+                  ) : (
+                    ref
+                  )}
+                </span>
+              )
+            })}
+          </p>
           <button
             type="button"
             onClick={next}

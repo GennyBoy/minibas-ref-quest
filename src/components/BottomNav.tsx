@@ -2,6 +2,7 @@ import { Link, useLocation } from 'wouter'
 
 const items = [
   { href: '/', label: 'ホーム', icon: '🏀' },
+  { href: '/rules', label: 'ルール', icon: '📖' },
   { href: '/progress', label: '進捗', icon: '📈' },
   { href: '/settings', label: '設定', icon: '⚙️' },
 ]
@@ -12,7 +13,8 @@ export default function BottomNav() {
     <nav className="fixed inset-x-0 bottom-0 border-t border-orange-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <div className="mx-auto flex max-w-md">
         {items.map((item) => {
-          const active = location === item.href
+          const active =
+            item.href === '/' ? location === '/' : location.startsWith(item.href)
           return (
             <Link
               key={item.href}
