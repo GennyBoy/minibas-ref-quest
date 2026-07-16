@@ -4,10 +4,12 @@ import { allQuestions, validateQuestions, TO_ROLES, ROLE_LABELS } from '../conte
 import {
   shotClockCases,
   gameClockCases,
+  sheetTasks,
   validateDrillContent,
   isDivergent,
 } from '../content/drills'
 import { buildChapters } from '../src/features/rules/parse'
+import { validateSheetTasks } from '../src/lib/scoresheet'
 
 const errors = validateQuestions(allQuestions)
 if (errors.length > 0) {
@@ -19,12 +21,16 @@ if (errors.length > 0) {
 console.log(`OK: ${allQuestions.length}問すべて検証を通過`)
 
 // ドリルケースの検証
-const drillErrors = validateDrillContent({ shotClockCases, gameClockCases })
+const drillErrors = validateDrillContent({ shotClockCases, gameClockCases, sheetTasks })
+drillErrors.push(...validateSheetTasks(sheetTasks))
 if (shotClockCases.length < 30) {
   drillErrors.push(`shotclock: ケースが${shotClockCases.length}件（30件以上必要）`)
 }
 if (gameClockCases.length < 20) {
   drillErrors.push(`gameclock: ケースが${gameClockCases.length}件（20件以上必要）`)
+}
+if (sheetTasks.length < 20) {
+  drillErrors.push(`sheet: お題が${sheetTasks.length}件（20件以上必要）`)
 }
 if (drillErrors.length > 0) {
   console.error('ドリル検証エラー:')
@@ -37,6 +43,7 @@ console.log(
 console.log(
   `OK: ドリル gameclock ${gameClockCases.length}ケース（うちU12/一般で答えが分かれる ${gameClockCases.filter(isDivergent).length}ケース）`,
 )
+console.log(`OK: ドリル sheet ${sheetTasks.length}お題（記入ルールの機械検証込み）`)
 
 // ナレッジ（ルール閲覧コンテンツ）の検証
 const knowledgeDir = join(import.meta.dirname, '..', 'content', 'knowledge')
@@ -53,7 +60,7 @@ if (!existsSync(knowledgeDir)) {
   knowledgeErrors.push(...warnings)
 
   const slugs = new Set(chapters.map((c) => c.slug))
-  for (const q of [...allQuestions, ...shotClockCases, ...gameClockCases]) {
+  for (const q of [...allQuestions, ...shotClockCases, ...gameClockCases, ...sheetTasks]) {
     for (const ref of q.refs) {
       const slug = ref.match(/^knowledge\/(.+)$/)?.[1]
       if (slug !== undefined && !slugs.has(slug)) {

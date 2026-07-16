@@ -5,6 +5,7 @@ import RoleHub from './pages/RoleHub'
 import Quiz from './pages/Quiz'
 import DrillShotClock from './pages/DrillShotClock'
 import DrillGameClock from './pages/DrillGameClock'
+import DrillSheet from './pages/DrillSheet'
 import Rules from './pages/Rules'
 import RuleChapter from './pages/RuleChapter'
 import Progress from './pages/Progress'
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/quiz" component={Quiz} />
             <Route path="/drill/shotclock" component={DrillShotClock} />
             <Route path="/drill/gameclock" component={DrillGameClock} />
+            <Route path="/drill/sheet" component={DrillSheet} />
             <Route path="/rules" component={Rules} />
             <Route path="/rules/:slug/:section?" component={RuleChapter} />
             <Route path="/progress" component={Progress} />

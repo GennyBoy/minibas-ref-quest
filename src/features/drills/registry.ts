@@ -35,6 +35,16 @@ export const DRILLS: DrillMeta[] = [
     description: 'スタート / ストップ / 何もしない を瞬時に判断',
     timeLimitMs: 5000,
   },
+  {
+    id: 'sheet',
+    route: '/drill/sheet',
+    role: 'scorer',
+    icon: '📝',
+    title: 'スコアシート記入ドリル',
+    shortTitle: '記入ドリル',
+    description: '得点・ファウル・タイムアウトを正しい記号と色で記入',
+    timeLimitMs: 30000,
+  },
 ]
 
 export function drillsForRole(role: ToRole): DrillMeta[] {
