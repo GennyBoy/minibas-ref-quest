@@ -36,21 +36,62 @@ export const shotClockCaseSchema = z.object({
 })
 export type ShotClockCase = z.infer<typeof shotClockCaseSchema>
 
+/** タイマードリルの3アクション */
+export const GAME_CLOCK_ACTIONS = ['start', 'stop', 'none'] as const
+export const gameClockActionSchema = z.enum(GAME_CLOCK_ACTIONS)
+export type GameClockAction = z.infer<typeof gameClockActionSchema>
+
+export const GAME_CLOCK_ACTION_LABELS: Record<GameClockAction, string> = {
+  start: 'スタート',
+  stop: 'ストップ',
+  none: '何もしない',
+}
+
+/** ゲームクロック判断ケース */
+export const gameClockCaseSchema = z.object({
+  id: z.string().regex(/^gc-\d{3}$/),
+  situation: z.string().min(8),
+  /** 出題時のクロック演出（残り時間・動いているか・ピリオド表示） */
+  clock: z.object({
+    gameMs: z.number().int().min(0),
+    running: z.boolean(),
+    quarter: z.string().optional(),
+  }),
+  answer: z.object({
+    u12: gameClockActionSchema,
+    general: gameClockActionSchema,
+  }),
+  explanation: z.string().min(10),
+  refs: z.array(z.string()).min(1),
+  ruleYear: z.number().int(),
+})
+export type GameClockCase = z.infer<typeof gameClockCaseSchema>
+
 /** U12と一般で答えが分かれるケースか（くらべるモードの出題対象） */
-export function isDivergent(c: Pick<ShotClockCase, 'answer'>): boolean {
+export function isDivergent(c: { answer: { u12: string; general: string } }): boolean {
   return c.answer.u12 !== c.answer.general
 }
 
 /** ドリルコンテンツ全体の検証（validate-content から呼ぶ） */
-export function validateDrillContent(content: { shotClockCases: ShotClockCase[] }): string[] {
+export function validateDrillContent(content: {
+  shotClockCases?: ShotClockCase[]
+  gameClockCases?: GameClockCase[]
+}): string[] {
   const errors: string[] = []
   const seen = new Set<string>()
-  for (const c of content.shotClockCases) {
+  for (const c of content.shotClockCases ?? []) {
     const result = shotClockCaseSchema.safeParse(c)
     if (!result.success) {
-      errors.push(
-        `${c.id ?? '(no id)'}: ${result.error.issues.map((i) => i.message).join(', ')}`,
-      )
+      errors.push(`${c.id ?? '(no id)'}: ${result.error.issues.map((i) => i.message).join(', ')}`)
+      continue
+    }
+    if (seen.has(c.id)) errors.push(`${c.id}: ID重複`)
+    seen.add(c.id)
+  }
+  for (const c of content.gameClockCases ?? []) {
+    const result = gameClockCaseSchema.safeParse(c)
+    if (!result.success) {
+      errors.push(`${c.id ?? '(no id)'}: ${result.error.issues.map((i) => i.message).join(', ')}`)
       continue
     }
     if (seen.has(c.id)) errors.push(`${c.id}: ID重複`)

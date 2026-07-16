@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   shotClockCases,
+  gameClockCases,
   shotClockCaseSchema,
+  gameClockCaseSchema,
   validateDrillContent,
   isDivergent,
 } from '../content/drills'
@@ -47,5 +49,45 @@ describe('shotclock cases', () => {
       ).length
       expect(n, action).toBeGreaterThanOrEqual(2)
     }
+  })
+})
+
+describe('gameclock cases', () => {
+  it('全ケースがスキーマを通過し、IDがドリル全体で一意', () => {
+    expect(validateDrillContent({ shotClockCases, gameClockCases })).toEqual([])
+    for (const c of gameClockCases) {
+      expect(gameClockCaseSchema.safeParse(c).success).toBe(true)
+    }
+  })
+
+  it('20ケース以上ある', () => {
+    expect(gameClockCases.length).toBeGreaterThanOrEqual(20)
+  })
+
+  // knowledge/09: 第4Q・OT残り2:00以下のFG成功で止めるのは一般のみ（U12に規定なし）
+  it('L2Mの相違ケースが存在し、一般=stop / U12=none になっている', () => {
+    const divergent = gameClockCases.filter(isDivergent)
+    expect(divergent.length).toBeGreaterThanOrEqual(2)
+    for (const c of divergent) {
+      expect(c.answer.general).toBe('stop')
+      expect(c.answer.u12).toBe('none')
+      expect(c.explanation).toMatch(/U12/)
+    }
+  })
+
+  it('3アクションすべてが最低3ケースずつ出題される', () => {
+    for (const action of ['start', 'stop', 'none'] as const) {
+      const n = gameClockCases.filter(
+        (c) => c.answer.u12 === action || c.answer.general === action,
+      ).length
+      expect(n, action).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('SCブザーは笛の有無で答えが変わる2ケースが対になっている', () => {
+    const withWhistle = gameClockCases.find((c) => c.id === 'gc-013')!
+    const withoutWhistle = gameClockCases.find((c) => c.id === 'gc-014')!
+    expect(withWhistle.answer.general).toBe('stop')
+    expect(withoutWhistle.answer.general).toBe('none')
   })
 })

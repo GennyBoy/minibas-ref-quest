@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'wouter'
 import {
   shotClockCases,
   isDivergent,
@@ -7,15 +6,15 @@ import {
   type ShotClockAction,
   type ShotClockCase,
 } from '../../content/drills'
-import { useProgress } from '../stores/progress'
 import { useSettings } from '../stores/settings'
-import { chapterBySlug } from '../features/rules/chapters'
 import { shuffle } from '../lib/session'
-import { drillBestKey, type DrillMode } from '../lib/drill'
+import { type DrillMode } from '../lib/drill'
 import { formatShotClock } from '../lib/clock'
 import { useClock } from '../features/drills/useClock'
 import { DRILLS } from '../features/drills/registry'
 import DrillShell from '../features/drills/DrillShell'
+import ModePicker from '../features/drills/ModePicker'
+import RefsLine from '../features/drills/RefsLine'
 import ClockDisplay from '../components/ClockDisplay'
 
 const META = DRILLS.find((d) => d.id === 'shotclock')!
@@ -47,7 +46,34 @@ export default function DrillShotClock() {
   const [nonce, setNonce] = useState(0)
 
   if (mode === null) {
-    return <ModePicker defaultRuleset={defaultRuleset} onPick={setMode} />
+    const divergentCount = shotClockCases.filter(isDivergent).length
+    return (
+      <ModePicker
+        meta={META}
+        lead={`場面を見て「24 / 14 / 継続 / 止めるだけ」を${META.timeLimitMs / 1000}秒以内に判断。全${QUESTIONS_PER_SESSION}問`}
+        modes={[
+          {
+            mode: 'u12',
+            title: '🏀 U12（ミニバス）',
+            description: 'ミニバスのルールで判断する',
+            highlight: defaultRuleset === 'u12',
+          },
+          {
+            mode: 'general',
+            title: '🏀 一般（5人制）',
+            description: '一般ルール（フロントコートあり）で判断する',
+            highlight: defaultRuleset === 'general',
+          },
+          {
+            mode: 'compare',
+            title: '⚡ くらべるモード',
+            description: `同じ場面でU12と一般の答えが変わる${divergentCount}ケースを交互に判断`,
+            highlight: false,
+          },
+        ]}
+        onPick={setMode}
+      />
+    )
   }
   return (
     <ShotClockSession
@@ -56,81 +82,6 @@ export default function DrillShotClock() {
       onRetry={() => setNonce((n) => n + 1)}
       onChangeMode={() => setMode(null)}
     />
-  )
-}
-
-function ModePicker({
-  defaultRuleset,
-  onPick,
-}: {
-  defaultRuleset: 'u12' | 'general'
-  onPick: (m: DrillMode) => void
-}) {
-  const drillBest = useProgress((s) => s.drillBest)
-  const divergentCount = shotClockCases.filter(isDivergent).length
-  const modes: { mode: DrillMode; title: string; description: string; highlight: boolean }[] = [
-    {
-      mode: 'u12',
-      title: '🏀 U12（ミニバス）',
-      description: 'ミニバスのルールで判断する',
-      highlight: defaultRuleset === 'u12',
-    },
-    {
-      mode: 'general',
-      title: '🏀 一般（5人制）',
-      description: '一般ルール（フロントコートあり）で判断する',
-      highlight: defaultRuleset === 'general',
-    },
-    {
-      mode: 'compare',
-      title: '⚡ くらべるモード',
-      description: `同じ場面でU12と一般の答えが変わる${divergentCount}ケースを交互に判断`,
-      highlight: false,
-    },
-  ]
-  return (
-    <div className="space-y-4">
-      <Link href={`/to/${META.role}`} className="inline-block text-sm text-slate-500">
-        ← SCオペレーターハブ
-      </Link>
-      <header className="rounded-2xl bg-white p-5 text-center shadow-sm">
-        <div className="text-4xl">{META.icon}</div>
-        <h1 className="mt-1 text-lg font-black">{META.title}</h1>
-        <p className="mt-1 text-xs text-slate-500">
-          場面を見て「24 / 14 / 継続 / 止めるだけ」を{META.timeLimitMs / 1000}
-          秒以内に判断。全{QUESTIONS_PER_SESSION}問
-        </p>
-      </header>
-      <div className="space-y-2.5">
-        {modes.map(({ mode, title, description, highlight }) => {
-          const best = drillBest[drillBestKey('shotclock', mode)]
-          return (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => onPick(mode)}
-              className={`block w-full rounded-2xl p-4 text-left shadow-sm active:scale-[0.99] ${
-                highlight ? 'bg-orange-500 text-white' : 'bg-white text-slate-700'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-black">{title}</span>
-                {best && (
-                  <span
-                    className={`text-xs font-bold ${highlight ? 'text-orange-100' : 'text-amber-600'}`}
-                  >
-                    🏆 {best.score}点
-                  </span>
-                )}
-              </div>
-              <p className={`mt-1 text-xs ${highlight ? 'text-orange-100' : 'text-slate-500'}`}>
-                {description}
-              </p>
-            </button>
-          )
-        })}
-      </div>
-    </div>
   )
 }
 
@@ -266,31 +217,4 @@ function AmbientShotClock({ seconds }: { seconds: number }) {
     start()
   }, [start])
   return <ClockDisplay shotText={clock.text} />
-}
-
-function RefsLine({ refs }: { refs: string[] }) {
-  return (
-    <p className="text-[11px] text-slate-400">
-      根拠:{' '}
-      {refs.map((ref, i) => {
-        const slug = ref.match(/^knowledge\/(.+)$/)?.[1]
-        const chapter = slug ? chapterBySlug.get(slug) : undefined
-        return (
-          <span key={ref}>
-            {i > 0 && '、'}
-            {chapter ? (
-              <Link
-                href={`/rules/${chapter.slug}`}
-                className="font-bold text-orange-600 underline underline-offset-2"
-              >
-                📖 {chapter.title}
-              </Link>
-            ) : (
-              ref
-            )}
-          </span>
-        )
-      })}
-    </p>
-  )
 }

@@ -25,6 +25,16 @@ export const DRILLS: DrillMeta[] = [
     description: '24 / 14 / 継続 / 止めるだけ を瞬時に判断',
     timeLimitMs: 5000,
   },
+  {
+    id: 'gameclock',
+    route: '/drill/gameclock',
+    role: 'timer',
+    icon: '⏰',
+    title: 'ゲームクロック判断ドリル',
+    shortTitle: 'クロックドリル',
+    description: 'スタート / ストップ / 何もしない を瞬時に判断',
+    timeLimitMs: 5000,
+  },
 ]
 
 export function drillsForRole(role: ToRole): DrillMeta[] {

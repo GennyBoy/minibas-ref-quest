@@ -1,7 +1,12 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { allQuestions, validateQuestions, TO_ROLES, ROLE_LABELS } from '../content'
-import { shotClockCases, validateDrillContent, isDivergent } from '../content/drills'
+import {
+  shotClockCases,
+  gameClockCases,
+  validateDrillContent,
+  isDivergent,
+} from '../content/drills'
 import { buildChapters } from '../src/features/rules/parse'
 
 const errors = validateQuestions(allQuestions)
@@ -14,9 +19,12 @@ if (errors.length > 0) {
 console.log(`OK: ${allQuestions.length}問すべて検証を通過`)
 
 // ドリルケースの検証
-const drillErrors = validateDrillContent({ shotClockCases })
+const drillErrors = validateDrillContent({ shotClockCases, gameClockCases })
 if (shotClockCases.length < 30) {
   drillErrors.push(`shotclock: ケースが${shotClockCases.length}件（30件以上必要）`)
+}
+if (gameClockCases.length < 20) {
+  drillErrors.push(`gameclock: ケースが${gameClockCases.length}件（20件以上必要）`)
 }
 if (drillErrors.length > 0) {
   console.error('ドリル検証エラー:')
@@ -25,6 +33,9 @@ if (drillErrors.length > 0) {
 }
 console.log(
   `OK: ドリル shotclock ${shotClockCases.length}ケース（うちU12/一般で答えが分かれる ${shotClockCases.filter(isDivergent).length}ケース）`,
+)
+console.log(
+  `OK: ドリル gameclock ${gameClockCases.length}ケース（うちU12/一般で答えが分かれる ${gameClockCases.filter(isDivergent).length}ケース）`,
 )
 
 // ナレッジ（ルール閲覧コンテンツ）の検証
@@ -42,7 +53,7 @@ if (!existsSync(knowledgeDir)) {
   knowledgeErrors.push(...warnings)
 
   const slugs = new Set(chapters.map((c) => c.slug))
-  for (const q of [...allQuestions, ...shotClockCases]) {
+  for (const q of [...allQuestions, ...shotClockCases, ...gameClockCases]) {
     for (const ref of q.refs) {
       const slug = ref.match(/^knowledge\/(.+)$/)?.[1]
       if (slug !== undefined && !slugs.has(slug)) {
