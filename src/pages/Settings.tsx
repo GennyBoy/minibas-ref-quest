@@ -3,13 +3,20 @@ import { useProgress } from '../stores/progress'
 import { useSettings } from '../stores/settings'
 
 export default function Settings() {
-  const { xp, srs, sessions, importState, reset } = useProgress()
+  const { xp, srs, sessions, drillBest, importState, reset } = useProgress()
   const { ruleset, questionsPerSession, setRuleset, setQuestionsPerSession } = useSettings()
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState('')
 
   function exportData() {
-    const data = JSON.stringify({ app: 'minibas-ref-quest', version: 1, xp, srs, sessions })
+    const data = JSON.stringify({
+      app: 'minibas-ref-quest',
+      version: 2,
+      xp,
+      srs,
+      sessions,
+      drillBest,
+    })
     const blob = new Blob([data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

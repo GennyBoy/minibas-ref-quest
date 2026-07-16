@@ -34,11 +34,26 @@
       transform: translateX(2px);
     }
   }
+
+  --animate-clock-flash: clock-flash 0.6s ease-out;
+
+  @keyframes clock-flash {
+    0%,
+    50%,
+    100% {
+      opacity: 1;
+    }
+    25%,
+    75% {
+      opacity: 0.35;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-quiz-pop,
-  .animate-quiz-shake {
+  .animate-quiz-shake,
+  .animate-clock-flash {
     animation: none;
   }
 }

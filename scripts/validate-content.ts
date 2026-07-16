@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { allQuestions, validateQuestions, TO_ROLES, ROLE_LABELS } from '../content'
+import { shotClockCases, validateDrillContent, isDivergent } from '../content/drills'
 import { buildChapters } from '../src/features/rules/parse'
 
 const errors = validateQuestions(allQuestions)
@@ -11,6 +12,20 @@ if (errors.length > 0) {
 }
 
 console.log(`OK: ${allQuestions.length}問すべて検証を通過`)
+
+// ドリルケースの検証
+const drillErrors = validateDrillContent({ shotClockCases })
+if (shotClockCases.length < 30) {
+  drillErrors.push(`shotclock: ケースが${shotClockCases.length}件（30件以上必要）`)
+}
+if (drillErrors.length > 0) {
+  console.error('ドリル検証エラー:')
+  for (const e of drillErrors) console.error(`  - ${e}`)
+  process.exit(1)
+}
+console.log(
+  `OK: ドリル shotclock ${shotClockCases.length}ケース（うちU12/一般で答えが分かれる ${shotClockCases.filter(isDivergent).length}ケース）`,
+)
 
 // ナレッジ（ルール閲覧コンテンツ）の検証
 const knowledgeDir = join(import.meta.dirname, '..', 'content', 'knowledge')
@@ -27,7 +42,7 @@ if (!existsSync(knowledgeDir)) {
   knowledgeErrors.push(...warnings)
 
   const slugs = new Set(chapters.map((c) => c.slug))
-  for (const q of allQuestions) {
+  for (const q of [...allQuestions, ...shotClockCases]) {
     for (const ref of q.refs) {
       const slug = ref.match(/^knowledge\/(.+)$/)?.[1]
       if (slug !== undefined && !slugs.has(slug)) {

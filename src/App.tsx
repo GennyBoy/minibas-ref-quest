@@ -3,6 +3,7 @@ import { useHashLocation } from 'wouter/use-hash-location'
 import Home from './pages/Home'
 import RoleHub from './pages/RoleHub'
 import Quiz from './pages/Quiz'
+import DrillShotClock from './pages/DrillShotClock'
 import Rules from './pages/Rules'
 import RuleChapter from './pages/RuleChapter'
 import Progress from './pages/Progress'
@@ -20,6 +21,7 @@ export default function App() {
             <Route path="/to/:role" component={RoleHub} />
             <Route path="/to/:role/quiz" component={Quiz} />
             <Route path="/quiz" component={Quiz} />
+            <Route path="/drill/shotclock" component={DrillShotClock} />
             <Route path="/rules" component={Rules} />
             <Route path="/rules/:slug/:section?" component={RuleChapter} />
             <Route path="/progress" component={Progress} />

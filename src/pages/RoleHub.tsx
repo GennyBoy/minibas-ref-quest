@@ -5,12 +5,16 @@ import { useSettings } from '../stores/settings'
 import { questionPool, ROLE_ICONS } from '../features/quiz/pool'
 import { dueCount } from '../lib/session'
 import { roleMastery, hasBadge, questionIdsForRole, BADGE_THRESHOLD } from '../lib/badges'
+import { drillBestKey, type DrillMode } from '../lib/drill'
+import { drillsForRole } from '../features/drills/registry'
 import MasteryMeter from '../components/MasteryMeter'
+
+const DRILL_MODES: DrillMode[] = ['u12', 'general', 'compare']
 
 export default function RoleHub() {
   const params = useParams<{ role: string }>()
   const role = TO_ROLES.find((r) => r === params.role) as ToRole | undefined
-  const { srs } = useProgress()
+  const { srs, drillBest } = useProgress()
   const ruleset = useSettings((s) => s.ruleset)
 
   if (!role) {
@@ -24,6 +28,7 @@ export default function RoleHub() {
   const m = roleMastery(pool, role, srs, now)
   const badge = hasBadge(pool, role, srs, now)
   const due = dueCount(pool, srs, role, now)
+  const drills = drillsForRole(role)
 
   return (
     <div className="space-y-4">
@@ -59,10 +64,33 @@ export default function RoleHub() {
       </Link>
 
       <div className="grid grid-cols-2 gap-2.5">
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-center">
-          <p className="text-sm font-bold text-slate-400">🎮 ドリル</p>
-          <p className="mt-1 text-[11px] text-slate-400">近日公開</p>
-        </div>
+        {drills.length > 0 ? (
+          drills.map((d) => {
+            const best = Math.max(
+              0,
+              ...DRILL_MODES.map((m) => drillBest[drillBestKey(d.id, m)]?.score ?? 0),
+            )
+            return (
+              <Link
+                key={d.id}
+                href={d.route}
+                className="rounded-2xl bg-white p-4 text-center shadow-sm active:scale-[0.99]"
+              >
+                <p className="text-sm font-black text-orange-600">
+                  {d.icon} {d.shortTitle}
+                </p>
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {best > 0 ? `🏆 ベスト ${best}点` : d.description}
+                </p>
+              </Link>
+            )
+          })
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-center">
+            <p className="text-sm font-bold text-slate-400">🎮 ドリル</p>
+            <p className="mt-1 text-[11px] text-slate-400">近日公開</p>
+          </div>
+        )}
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-center">
           <p className="text-sm font-bold text-slate-400">🎬 シミュレーター</p>
           <p className="mt-1 text-[11px] text-slate-400">近日公開</p>
