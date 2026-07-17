@@ -4,6 +4,8 @@ import type { SrsState } from '../lib/srs'
 import { review } from '../lib/srs'
 import type { DrillBest, DrillScore } from '../lib/drill'
 import { isNewBest } from '../lib/drill'
+import type { SimSummary } from '../lib/sim'
+import { isNewSimBest } from '../lib/sim'
 
 export interface SessionRecord {
   at: number
@@ -12,7 +14,8 @@ export interface SessionRecord {
   total: number
   xpGained: number
   /** 未指定はクイズ（v1からのデータ互換のため optional） */
-  kind?: 'quiz' | 'drill'
+  kind?: 'quiz' | 'drill' | 'sim'
+  /** ドリルID（kind: sim のときは台本ID） */
   drillId?: string
 }
 
@@ -37,6 +40,14 @@ export interface ProgressState {
     drillId: string,
     role: string | null,
     result: DrillScore,
+    xpGained: number,
+    at: number,
+  ) => void
+  recordSim: (
+    key: string,
+    scriptId: string,
+    role: string | null,
+    result: SimSummary,
     xpGained: number,
     at: number,
   ) => void
@@ -88,6 +99,33 @@ export const useProgress = create<ProgressState>()(
                 xpGained,
                 kind: 'drill' as const,
                 drillId,
+              },
+            ].slice(-200),
+          }
+        }),
+      recordSim: (key, scriptId, role, result, xpGained, at) =>
+        set((state) => {
+          const prev = state.drillBest[key]
+          // 自己ベストは drillBest に相乗り（bestStreak の概念がないので 0 固定）
+          const drillBest = isNewSimBest(prev, result)
+            ? {
+                ...state.drillBest,
+                [key]: { score: result.score, bestStreak: 0, avgReactionMs: result.avgDelayMs, at },
+              }
+            : state.drillBest
+          return {
+            xp: state.xp + xpGained,
+            drillBest,
+            sessions: [
+              ...state.sessions,
+              {
+                at,
+                role,
+                correct: result.correct,
+                total: result.total,
+                xpGained,
+                kind: 'sim' as const,
+                drillId: scriptId,
               },
             ].slice(-200),
           }

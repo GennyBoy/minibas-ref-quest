@@ -41,6 +41,16 @@ const browser = await puppeteer.launch({
 - 本文中のwikilinkは `.rules-md a[href^="#/rules/"]`（素のhashアンカー。useHashLocationが拾う）
 - クイズのフィードバックの根拠リンク: `p a[href^="/rules/"]`（knowledge/ refのみリンク化される）
 
+## TOシミュレーター（#/tosim/:role）の操作セレクタ
+
+- 入口: `#/tosim/sc-operator` / `#/tosim/scorer`（未実装役割は「近日公開」フォールバック）。役割ハブのカードは `a[href="#/tosim/<role>"]`
+- イントロ→「▶ シミュレーション開始」ボタンで再生開始。イベントは台本時刻（1倍速実時間）で発火する
+- 再生コントロール: ⏸/▶ は `button.bg-slate-800`、倍率は「0.5x/1x/1.5x」テキスト、イベント送りは textContent `⏭`（連打すれば見逃し多数で結果画面まで最速到達できる）
+- SCパネル: 3ボタン（24/14/継続）。押下後500msロックがあるので連続操作は700ms以上空ける
+- スコアラーパネル: 得点マスは `span.text-sm.text-slate-400` の数字テキストで特定（同スコアで白→赤の順）。記号は「FG 2点」等のテキスト、ペンは「赤ペン/濃色ペン」、確定は「✍️ 記入する」。APアローは「◀ 白へ」「赤へ ▶」
+- 一時停止中はパネルが disabled になる（照合遅延は台本時刻基準なので停止中に考えても採点は進まない）
+- 結果画面は「結果」見出し＋フィルタタブ（すべて/見逃し/ミス・誤操作）。自己ベストは localStorage の progress（drillBest の `sim/<scriptId>/<role>` キー）
+
 ## クイズ画面の操作セレクタ
 
 - 選択肢ボタン: `button.rounded-2xl`（single は縦並び、truefalse は2列グリッド）

@@ -6,7 +6,10 @@ import { questionPool, ROLE_ICONS } from '../features/quiz/pool'
 import { dueCount } from '../lib/session'
 import { roleMastery, hasBadge, questionIdsForRole, BADGE_THRESHOLD } from '../lib/badges'
 import { drillBestKey, type DrillMode } from '../lib/drill'
+import { simBestKey } from '../lib/sim'
 import { drillsForRole } from '../features/drills/registry'
+import { simPluginForRole } from '../features/tosim/roles/registry'
+import { gameScripts } from '../../content/sim'
 import MasteryMeter from '../components/MasteryMeter'
 
 const DRILL_MODES: DrillMode[] = ['u12', 'general', 'compare']
@@ -29,6 +32,11 @@ export default function RoleHub() {
   const badge = hasBadge(pool, role, srs, now)
   const due = dueCount(pool, srs, role, now)
   const drills = drillsForRole(role)
+  const sim = simPluginForRole(role)
+  const simBest = Math.max(
+    0,
+    ...gameScripts.map((s) => drillBest[simBestKey(s.id, role)]?.score ?? 0),
+  )
 
   return (
     <div className="space-y-4">
@@ -91,10 +99,22 @@ export default function RoleHub() {
             <p className="mt-1 text-[11px] text-slate-400">近日公開</p>
           </div>
         )}
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-center">
-          <p className="text-sm font-bold text-slate-400">🎬 シミュレーター</p>
-          <p className="mt-1 text-[11px] text-slate-400">近日公開</p>
-        </div>
+        {sim ? (
+          <Link
+            href={`/tosim/${role}`}
+            className="rounded-2xl bg-white p-4 text-center shadow-sm active:scale-[0.99]"
+          >
+            <p className="text-sm font-black text-orange-600">🎬 {sim.shortTitle}</p>
+            <p className="mt-1 text-[11px] text-slate-500">
+              {simBest > 0 ? `🏆 ベスト ${simBest}点` : sim.description}
+            </p>
+          </Link>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-4 text-center">
+            <p className="text-sm font-bold text-slate-400">🎬 シミュレーター</p>
+            <p className="mt-1 text-[11px] text-slate-400">近日公開</p>
+          </div>
+        )}
       </div>
     </div>
   )
