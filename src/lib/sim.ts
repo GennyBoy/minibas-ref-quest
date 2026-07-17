@@ -1,71 +1,50 @@
 import type { ToRole } from '../../content/types'
+import type { SimSegment } from '../features/tosim/steps'
 import type { DrillBest } from './drill'
 
-/** シミュレーターの採点・スコアの純ロジック（lib/drill.ts と対になる） */
+/** ターン制シミュレーターの採点・スコアの純ロジック（lib/drill.ts と対になる） */
 
-export type SimOutcome = 'correct' | 'wrong' | 'missed'
-
-/** 集計に必要な最小の形（エンジンの SimEventResult がそのまま渡せる） */
-export interface SimResultLog {
-  outcome: SimOutcome
-  delayMs: number | null
-  windowMs: number
+export interface SimStepLog {
+  correct: boolean
 }
 
 export interface SimSummary {
   correct: number
   wrong: number
-  missed: number
-  falseInputs: number
   total: number
-  /** 反応した操作の平均遅延（見逃しは除外）。操作が1つもなければ null */
-  avgDelayMs: number | null
+  bestStreak: number
   score: number
 }
 
-/**
- * セッション集計。正解 = 100 + 速度ボーナス(最大50)、誤り = 20（反応はした）、
- * 見逃し = 0、誤操作は1件につき −30（合計は0未満にしない）
- */
-export function tallySim(logs: SimResultLog[], falseInputCount: number): SimSummary {
+/** セッション集計。正解 = 100点、最後にベストストリーク×20（時間要素なし） */
+export function tallySimSteps(logs: SimStepLog[]): SimSummary {
   let correct = 0
-  let wrong = 0
-  let missed = 0
-  let score = 0
-  const delays: number[] = []
+  let streak = 0
+  let bestStreak = 0
   for (const log of logs) {
-    if (log.outcome === 'missed') {
-      missed += 1
-      continue
-    }
-    const delay = log.delayMs ?? log.windowMs
-    delays.push(delay)
-    if (log.outcome === 'correct') {
+    if (log.correct) {
       correct += 1
-      const speedRatio = Math.max(0, Math.min(1, (log.windowMs - delay) / log.windowMs))
-      score += 100 + Math.round(speedRatio * 50)
+      streak += 1
+      if (streak > bestStreak) bestStreak = streak
     } else {
-      wrong += 1
-      score += 20
+      streak = 0
     }
   }
-  score = Math.max(0, score - falseInputCount * 30)
-  const avgDelayMs =
-    delays.length > 0 ? Math.round(delays.reduce((sum, d) => sum + d, 0) / delays.length) : null
-  return { correct, wrong, missed, falseInputs: falseInputCount, total: logs.length, avgDelayMs, score }
+  const score = correct * 100 + bestStreak * 20
+  return { correct, wrong: logs.length - correct, total: logs.length, bestStreak, score }
 }
 
 export function isNewSimBest(prev: DrillBest | undefined, s: SimSummary): boolean {
   return !prev || s.score > prev.score
 }
 
-/** シミュレーター1セッションのXP（台本1本はドリルより長いので 5〜60 + ベスト更新10） */
+/** シミュレーター1セッションのXP（通し≒40問はドリルより長いので 5〜60 + ベスト更新10） */
 export function simXp(s: SimSummary, newBest: boolean): number {
   const base = Math.max(5, Math.min(60, Math.round(s.score / 50)))
   return base + (newBest ? 10 : 0)
 }
 
-/** 自己ベストの保存キー（progressストアの drillBest に相乗りする） */
-export function simBestKey(scriptId: string, role: ToRole): string {
-  return `sim/${scriptId}/${role}`
+/** 自己ベストの保存キー（progressストアの drillBest に相乗り。セグメント別に別記録） */
+export function simBestKey(scriptId: string, role: ToRole, segment: SimSegment): string {
+  return `sim/${scriptId}/${role}/${segment === 'full' ? 'full' : `q${segment}`}`
 }

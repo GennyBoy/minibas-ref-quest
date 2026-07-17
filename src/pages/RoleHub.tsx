@@ -9,6 +9,7 @@ import { drillBestKey, type DrillMode } from '../lib/drill'
 import { simBestKey } from '../lib/sim'
 import { drillsForRole } from '../features/drills/registry'
 import { simPluginForRole } from '../features/tosim/roles/registry'
+import { SIM_SEGMENTS } from '../features/tosim/steps'
 import { gameScripts } from '../../content/sim'
 import MasteryMeter from '../components/MasteryMeter'
 
@@ -35,7 +36,9 @@ export default function RoleHub() {
   const sim = simPluginForRole(role)
   const simBest = Math.max(
     0,
-    ...gameScripts.map((s) => drillBest[simBestKey(s.id, role)]?.score ?? 0),
+    ...gameScripts.flatMap((s) =>
+      SIM_SEGMENTS.map((seg) => drillBest[simBestKey(s.id, role, seg)]?.score ?? 0),
+    ),
   )
 
   return (

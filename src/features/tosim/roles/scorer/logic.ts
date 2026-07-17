@@ -7,12 +7,9 @@ import type {
 import { SHEET_SYMBOL_LABELS } from '../../../../../content/drills/types'
 import type { GameScript, ScorerExpect } from '../../../../../content/sim/types'
 import { PEN_COLOR_LABELS } from '../../../../lib/scoresheet'
-import type { SimEventResult } from '../../engine'
 import type { SimInput } from '../../types'
 
 export const TEAM_LABELS: Record<Team, string> = { A: '白(A)', B: '赤(B)' }
-
-const QUARTER_LABELS = { 1: '第1Q', 2: '第2Q', 3: '第3Q', 4: '第4Q', OT: 'OT' } as const
 
 export interface ScorerFragments {
   score: SheetFragment
@@ -22,8 +19,8 @@ export interface ScorerFragments {
 
 /**
  * 台本から記入に必要なシート断片（窓）を導出する。
- * 得点窓は最終スコア＋余白、ファウル行は台本に登場する背番号、
- * タイムアウト行はこのクォーターの枠（U12は各Q1回）。
+ * 得点窓は最終スコア＋余白、ファウル行は台本に登場する背番号＋HC、
+ * タイムアウト行はU12の各Q1枠（一般は前半2・後半3）。
  */
 export function scorerFragments(script: GameScript): ScorerFragments {
   const totals: Record<Team, number> = { A: 0, B: 0 }
@@ -32,17 +29,29 @@ export function scorerFragments(script: GameScript): ScorerFragments {
     if (e.team && e.playerNo !== undefined) players[e.team].add(String(e.playerNo))
     if (e.points !== undefined && e.team) totals[e.team] += e.points
   }
+  const timeoutRows =
+    script.ruleset === 'u12'
+      ? [
+          { label: '第1Q', slots: 1 },
+          { label: '第2Q', slots: 1 },
+          { label: '第3Q', slots: 1 },
+          { label: '第4Q', slots: 1 },
+        ]
+      : [
+          { label: '前半', slots: 2 },
+          { label: '後半', slots: 3 },
+        ]
   const teamFragment = (team: Team): SheetFragment => ({
     fouls: {
       team,
-      rows: [...players[team]]
-        .sort((a, b) => Number(a) - Number(b))
-        .map((label) => ({ label, slots: 5 })),
+      rows: [
+        ...[...players[team]]
+          .sort((a, b) => Number(a) - Number(b))
+          .map((label) => ({ label, slots: 5 })),
+        { label: 'HC', slots: 5 },
+      ],
     },
-    timeouts: {
-      team,
-      rows: [{ label: QUARTER_LABELS[script.quarter], slots: script.ruleset === 'u12' ? 1 : 3 }],
-    },
+    timeouts: { team, rows: timeoutRows },
   })
   return {
     score: { score: { from: 1, to: Math.max(totals.A, totals.B) + 2 } },
@@ -51,22 +60,16 @@ export function scorerFragments(script: GameScript): ScorerFragments {
   }
 }
 
-/** 盤面転記用: ウィンドウ確定済みイベントの期待マーク（盤面は台本が正） */
-export function confirmedMarks(results: SimEventResult[]): PlacedMark[] {
-  const marks: PlacedMark[] = []
-  for (const r of results) {
-    if (!('action' in r.expect) && r.expect.kind === 'mark') marks.push(r.expect.mark)
+/** フィードバックの「正しい記入例」用に、期待セルの周辺だけの小さな窓を作る */
+export function exampleFragment(cell: CellRef): SheetFragment {
+  switch (cell.kind) {
+    case 'score':
+      return { score: { from: Math.max(1, cell.score - 2), to: cell.score + 1 } }
+    case 'foul':
+      return { fouls: { team: cell.team, rows: [{ label: cell.row, slots: 5 }] } }
+    case 'timeout':
+      return { timeouts: { team: cell.team, rows: [{ label: cell.row, slots: cell.slot }] } }
   }
-  return marks
-}
-
-/** 確定済みイベントから現在のAPアローの向きを導く（未設定は null） */
-export function currentArrow(results: SimEventResult[]): Team | null {
-  let arrow: Team | null = null
-  for (const r of results) {
-    if (!('action' in r.expect) && r.expect.kind === 'apArrow') arrow = r.expect.to
-  }
-  return arrow
 }
 
 function cellLabel(cell: CellRef): string {

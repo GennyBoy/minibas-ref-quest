@@ -106,11 +106,16 @@ export const useProgress = create<ProgressState>()(
       recordSim: (key, scriptId, role, result, xpGained, at) =>
         set((state) => {
           const prev = state.drillBest[key]
-          // 自己ベストは drillBest に相乗り（bestStreak の概念がないので 0 固定）
+          // 自己ベストは drillBest に相乗り（時間要素がないので avgReactionMs は null）
           const drillBest = isNewSimBest(prev, result)
             ? {
                 ...state.drillBest,
-                [key]: { score: result.score, bestStreak: 0, avgReactionMs: result.avgDelayMs, at },
+                [key]: {
+                  score: result.score,
+                  bestStreak: result.bestStreak,
+                  avgReactionMs: null,
+                  at,
+                },
               }
             : state.drillBest
           return {

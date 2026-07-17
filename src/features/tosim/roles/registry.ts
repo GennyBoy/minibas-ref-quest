@@ -1,23 +1,42 @@
 import type { ComponentType } from 'react'
+import type { PenColor, PlacedMark, Team } from '../../../../content/drills/types'
+import type { GameScript } from '../../../../content/sim/types'
 import type { ToRole } from '../../../../content/types'
-import type { SimEngineState } from '../engine'
+import type { SimStep } from '../steps'
 import type { RoleExpect, SimInput } from '../types'
+import type { GradeResult } from './graders'
 import { scOperatorPlugin } from './sc-operator/plugin'
 import { scorerPlugin } from './scorer/plugin'
 
 /**
  * シミュレーターの役割プラグイン。役割を追加するときは
- * (1) content/sim/types.ts に expect スキーマ (2) roles/<role>/ に Panel と describe
+ * (1) content/sim/types.ts に expect スキーマ (2) roles/<role>/ に Panel・Feedback
  * (3) ここへの登録 (4) 台本の expect に該当役割のキー、の4点だけ足せばよい
- * （エンジン・SimShell・ルートは無変更）。
+ * （steps.ts・SimShell・ルートは無変更）。
  */
+
+/** 盤面の確定状態（台本が正: prefill＋回答済みステップの期待マークから導出） */
+export interface SimBoard {
+  marks: PlacedMark[]
+  arrow: Team | null
+}
+
 export interface SimPanelProps {
-  state: SimEngineState
-  gameText: string
-  /** null = 非表示状態 */
-  shotText: string | null
-  onInput: (input: SimInput) => void
-  disabled: boolean
+  step: SimStep
+  script: GameScript
+  board: SimBoard
+  /** セッション横断で持つペンの色（scorer用。他役割は無視してよい） */
+  pen: PenColor
+  setPen: (c: PenColor) => void
+  onSubmit: (input: SimInput) => void
+}
+
+export interface SimFeedbackProps {
+  step: SimStep
+  input: SimInput
+  grade: GradeResult
+  script: GameScript
+  board: SimBoard
 }
 
 export interface SimRolePlugin {
@@ -27,6 +46,8 @@ export interface SimRolePlugin {
   shortTitle: string
   description: string
   Panel: ComponentType<SimPanelProps>
+  /** 答え合わせカードの中身（正解・解説・記入例など） */
+  Feedback: ComponentType<SimFeedbackProps>
   /** 結果画面の「期待されていた操作」表示 */
   describeExpect: (expect: RoleExpect) => string
   /** 結果画面の「あなたの操作」表示 */

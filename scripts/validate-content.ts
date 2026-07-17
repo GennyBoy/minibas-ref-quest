@@ -8,6 +8,7 @@ import {
   validateDrillContent,
   isDivergent,
 } from '../content/drills'
+import { SHEET_SYMBOLS } from '../content/drills/types'
 import { gameScripts } from '../content/sim'
 import { buildChapters } from '../src/features/rules/parse'
 import { validateSheetTasks } from '../src/lib/scoresheet'
@@ -51,8 +52,34 @@ console.log(`OK: ドリル sheet ${sheetTasks.length}お題（記入ルールの
 const simErrors: string[] = []
 for (const s of gameScripts) {
   simErrors.push(...validateSimScript(s).map((e) => `${s.id} ${e}`))
-  if (s.events.length < 20 || s.events.length > 36) {
-    simErrors.push(`${s.id}: イベント数が${s.events.length}（20〜36が目安）`)
+  if (s.events.length < 60 || s.events.length > 110) {
+    simErrors.push(`${s.id}: イベント数が${s.events.length}（1試合分=60〜110が目安）`)
+  }
+  // 記入ルールのカバレッジ（U12対象の全記号・SC全アクション・アロー操作を1試合で通ること）
+  if (s.ruleset === 'u12') {
+    const symbols = new Set<string>()
+    const scActions = new Set<string>()
+    let hideCount = 0
+    let arrowCount = 0
+    for (const e of s.events) {
+      const scorer = e.expect.scorer
+      if (scorer?.kind === 'mark') symbols.add(scorer.mark.mark.symbol)
+      if (scorer?.kind === 'apArrow') arrowCount += 1
+      const sc = e.expect['sc-operator']
+      if (sc) scActions.add(sc.action)
+      if (e.shot === 'hide') hideCount += 1
+    }
+    const requiredSymbols = SHEET_SYMBOLS.filter((sym) => sym !== 'fg3')
+    for (const sym of requiredSymbols) {
+      if (!symbols.has(sym)) simErrors.push(`${s.id}: 記号 ${sym} の記入ステップがない`)
+    }
+    for (const a of ['reset24', 'reset14', 'keep']) {
+      if (!scActions.has(a)) simErrors.push(`${s.id}: SCアクション ${a} の出題がない`)
+    }
+    if (hideCount === 0) simErrors.push(`${s.id}: SC非表示（hide）の区間がない`)
+    if (arrowCount < 5) {
+      simErrors.push(`${s.id}: APアロー操作が${arrowCount}回（初期設定＋反転4回以上必要）`)
+    }
   }
 }
 if (simErrors.length > 0) {
