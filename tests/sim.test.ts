@@ -39,6 +39,7 @@ describe('simXp / simBestKey', () => {
   it('ベストキーは台本×役割×セグメントで分かれる', () => {
     expect(simBestKey('sim-game-u12', 'scorer', 'full')).toBe('sim/sim-game-u12/scorer/full')
     expect(simBestKey('sim-game-u12', 'scorer', 3)).toBe('sim/sim-game-u12/scorer/q3')
+    expect(simBestKey('sim-game-u12', 'scorer', 'closing')).toBe('sim/sim-game-u12/scorer/closing')
     expect(simBestKey('sim-game-u12', 'scorer', 'full')).not.toBe(
       simBestKey('sim-game-u12', 'sc-operator', 'full'),
     )

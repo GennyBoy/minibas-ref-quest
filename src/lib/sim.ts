@@ -46,5 +46,5 @@ export function simXp(s: SimSummary, newBest: boolean): number {
 
 /** 自己ベストの保存キー（progressストアの drillBest に相乗り。セグメント別に別記録） */
 export function simBestKey(scriptId: string, role: ToRole, segment: SimSegment): string {
-  return `sim/${scriptId}/${role}/${segment === 'full' ? 'full' : `q${segment}`}`
+  return `sim/${scriptId}/${role}/${typeof segment === 'number' ? `q${segment}` : segment}`
 }

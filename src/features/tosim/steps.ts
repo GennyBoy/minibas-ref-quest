@@ -11,8 +11,8 @@ import { kindOf } from './types'
  * Q途中開始のシート状態（記入・APアロー・ペン）を復元する。
  */
 
-export type SimSegment = 'full' | 1 | 2 | 3 | 4
-export const SIM_SEGMENTS: SimSegment[] = ['full', 1, 2, 3, 4]
+export type SimSegment = 'full' | 1 | 2 | 3 | 4 | 'closing'
+export const SIM_SEGMENTS: SimSegment[] = ['full', 1, 2, 3, 4, 'closing']
 
 /** クォーターの並び順（OTは第4Qの後） */
 export const QUARTER_ORDER: Quarter[] = [1, 2, 3, 4, 'OT']
@@ -21,7 +21,9 @@ export function quarterIndex(q: Quarter): number {
 }
 
 export function segmentLabel(segment: SimSegment): string {
-  return segment === 'full' ? '1試合通し' : `第${segment}Qのみ`
+  if (segment === 'full') return '1試合通し'
+  if (segment === 'closing') return '締めの記帳だけ'
+  return `第${segment}Qのみ`
 }
 
 export interface SimStep {
@@ -104,19 +106,39 @@ export function foldArrow(events: SimEvent[]): Team | null {
   return arrow
 }
 
+/**
+ * このイベントの直前までの盤面（記入・APアロー）。盤面は台本が正なので、
+ * セグメントに関係なくスクリプト順で畳み込む（締めだけモードでも
+ * 通常プレイの記入が転記済みで表示される）。
+ */
+export function boardBefore(
+  script: GameScript,
+  event: SimEvent,
+): { marks: PlacedMark[]; arrow: Team | null } {
+  const idx = script.events.indexOf(event)
+  const before = idx < 0 ? [] : script.events.slice(0, idx)
+  return { marks: foldScorerMarks(before), arrow: foldArrow(before) }
+}
+
 export function buildSession(script: GameScript, role: ToRole, segment: SimSegment): SimSessionPlan {
   const shotBefore = foldShotClock(script.events, script.quarterMs)
-  const inSegment = (e: SimEvent) => segment === 'full' || e.quarter === segment
+  const inSegment = (e: SimEvent) =>
+    segment === 'full' || (segment === 'closing' ? e.type === 'closing' : e.quarter === segment)
   const before =
-    segment === 'full'
+    segment === 'full' || segment === 'closing'
       ? []
       : script.events.filter((e) => quarterIndex(e.quarter) < quarterIndex(segment))
 
   const steps: SimStep[] = []
   let between: SimEvent[] = []
+  // 「直前」の文脈はセグメントに関係なくスクリプト順で追う（締めだけモードで
+  // periodEnd の実況が出るように）
   let prev: SimEvent | null = null
   script.events.forEach((e, i) => {
-    if (!inSegment(e)) return
+    if (!inSegment(e)) {
+      prev = e
+      return
+    }
     const expect = expectFor(e, role)
     if (!expect) {
       between.push(e)
@@ -143,7 +165,7 @@ export function buildSession(script: GameScript, role: ToRole, segment: SimSegme
     prefill: foldScorerMarks(before),
     initialArrow: foldArrow(before),
     initialPen:
-      segment === 'full' || segment === 1
+      segment === 'full' || segment === 'closing' || segment === 1
         ? 'dark'
         : penColorForQuarter((segment - 1) as Quarter),
     epilogue: between,

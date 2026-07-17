@@ -148,19 +148,24 @@ export default function ScoreSheetGrid({
       'relative border border-slate-300 bg-white',
       tone ? TONE_CLS[tone] : '',
       selected && !tone ? 'ring-2 ring-orange-500 z-10' : '',
-      !readOnly ? 'active:bg-orange-50' : '',
+      !readOnly ? 'cursor-pointer active:bg-orange-50' : '',
     ].join(' ')
   }
 
   function Cell({ cell, children }: { cell: CellRef; children: ReactNode }) {
+    // w-full: button の width:auto は shrink-to-fit のため、空マスだとタップ領域が潰れる
     if (readOnly) {
-      return <div className={cellCls(cell, 'flex min-h-11 items-center justify-center')}>{children}</div>
+      return (
+        <div className={cellCls(cell, 'flex min-h-11 w-full items-center justify-center')}>
+          {children}
+        </div>
+      )
     }
     return (
       <button
         type="button"
         onClick={() => onCellTap?.(cell)}
-        className={cellCls(cell, 'flex min-h-11 items-center justify-center')}
+        className={cellCls(cell, 'flex min-h-11 w-full items-center justify-center')}
       >
         {children}
       </button>
@@ -234,6 +239,7 @@ export default function ScoreSheetGrid({
         <div>
           <p className="mb-1 text-[10px] font-bold text-slate-500">
             ファウル欄（{fragment.fouls.team === 'A' ? '白' : '赤'}チーム）
+            {!readOnly && <span className="font-medium text-slate-400">・記入する枠をタップ</span>}
           </p>
           {fragment.fouls.rows.map((row) => (
             <div key={row.label} className="flex items-stretch">
@@ -251,6 +257,9 @@ export default function ScoreSheetGrid({
                 return (
                   <div key={slot} className="min-w-11 flex-1">
                     <Cell cell={cell}>
+                      {cellMarks.length === 0 && (
+                        <span className="text-xs text-slate-300">{slot}</span>
+                      )}
                       {cellMarks.map((m, i) => (
                         <MarkGlyph key={i} mark={m.mark} color={m.color} />
                       ))}
@@ -267,6 +276,7 @@ export default function ScoreSheetGrid({
         <div>
           <p className="mb-1 text-[10px] font-bold text-slate-500">
             タイムアウト欄（{fragment.timeouts.team === 'A' ? '白' : '赤'}チーム）
+            {!readOnly && <span className="font-medium text-slate-400">・記入する枠をタップ</span>}
           </p>
           {fragment.timeouts.rows.map((row) => (
             <div key={row.label} className="flex items-stretch">
@@ -284,6 +294,9 @@ export default function ScoreSheetGrid({
                 return (
                   <div key={slot} className="min-w-11 flex-1">
                     <Cell cell={cell}>
+                      {cellMarks.length === 0 && (
+                        <span className="text-xs text-slate-300">{slot}</span>
+                      )}
                       {cellMarks.map((m, i) => (
                         <MarkGlyph key={i} mark={m.mark} color={m.color} />
                       ))}

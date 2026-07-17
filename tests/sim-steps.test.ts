@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { gameU12Script } from '../content/sim'
 import {
+  boardBefore,
   buildSession,
   foldArrow,
   foldScorerMarks,
@@ -88,5 +89,29 @@ describe('buildSession', () => {
     expect(plan.prefill).toEqual(foldScorerMarks(firstHalf))
     expect(plan.initialPen).toBe('dark') // 前Q（第2Q）の色
     expect(plan.steps.every((s) => s.event.quarter === 3)).toBe(true)
+  })
+
+  it('「締めの記帳だけ」は全4Qの closing がステップになり、SCでは0件', () => {
+    const plan = buildSession(gameU12Script, 'scorer', 'closing')
+    const closings = gameU12Script.events.filter((e) => e.type === 'closing')
+    expect(plan.steps.length).toBe(closings.length)
+    expect(plan.steps.every((s) => s.event.type === 'closing')).toBe(true)
+    // 直前の文脈は periodEnd の実況になる（1問目）
+    expect(plan.steps[0].prev?.type).toBe('periodEnd')
+    expect(buildSession(gameU12Script, 'sc-operator', 'closing').steps.length).toBe(0)
+  })
+
+  it('boardBefore は締めだけモードでも通常プレイの記入を含む盤面を返す', () => {
+    const plan = buildSession(gameU12Script, 'scorer', 'closing')
+    // 前半の記帳①（Q2の最初の締め）の時点で、Q1〜Q2の得点記入がすべて転記されている
+    const q2Close = plan.steps.find((s) => s.event.quarter === 2)!
+    const board = boardBefore(gameU12Script, q2Close.event)
+    const upToQ2End = gameU12Script.events.slice(
+      0,
+      gameU12Script.events.indexOf(q2Close.event),
+    )
+    expect(board.marks).toEqual(foldScorerMarks(upToQ2End))
+    expect(board.marks.some((m) => m.cell.kind === 'score' && m.cell.score === 19)).toBe(true)
+    expect(board.arrow).toBe(foldArrow(upToQ2End))
   })
 })

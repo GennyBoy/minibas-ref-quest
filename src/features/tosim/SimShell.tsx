@@ -7,26 +7,14 @@ import { formatGameClock } from '../../lib/clock'
 import type { SimInput } from './types'
 import type { GradeResult } from './roles/graders'
 import { gradeInput } from './roles/graders'
-import type { SimBoard, SimRolePlugin } from './roles/registry'
-import type { SimSegment, SimSessionPlan } from './steps'
-import { buildSession, segmentLabel } from './steps'
+import type { SimRolePlugin } from './roles/registry'
+import type { SimSegment } from './steps'
+import { boardBefore, buildSession, segmentLabel } from './steps'
 import SimResult from './SimResult'
 
 export interface SimAnswer {
   input: SimInput
   grade: GradeResult
-}
-
-/** 回答済みステップまでの盤面（台本が正: prefill＋期待マークの累積） */
-function boardAt(plan: SimSessionPlan, answered: number): SimBoard {
-  const marks = [...plan.prefill]
-  let arrow = plan.initialArrow
-  for (const step of plan.steps.slice(0, answered)) {
-    if ('action' in step.expect) continue
-    if (step.expect.kind === 'mark') marks.push(step.expect.mark)
-    else arrow = step.expect.to
-  }
-  return { marks, arrow }
 }
 
 /**
@@ -81,7 +69,8 @@ export default function SimShell({
   }
 
   const step = plan.steps[idx]
-  const board = boardAt(plan, idx)
+  // 盤面は台本が正: このイベントより前の全期待マークから導出（締めだけモードにも対応）
+  const board = boardBefore(script, step.event)
   const answer = answers[idx]
   const showFeedback = phase === 'feedback' && answer !== undefined
   const streak = currentStreak(answers)
