@@ -129,12 +129,18 @@ export default function SimShell({
             残り {formatGameClock(step.event.gameClockMs)}
           </span>
         </div>
-        {step.between.length > 0 && (
+        {step.between.length > 0 ? (
           <ul className="mb-2 space-y-0.5 border-l-2 border-slate-100 pl-2 text-[11px] leading-relaxed text-slate-400">
             {step.between.map((e) => (
               <li key={e.id}>{e.narration}</li>
             ))}
           </ul>
+        ) : (
+          step.prev && (
+            <p className="mb-2 border-l-2 border-slate-100 pl-2 text-[11px] leading-relaxed text-slate-400">
+              直前: {step.prev.narration}
+            </p>
+          )
         )}
         <p className="font-medium leading-relaxed">📣 {step.event.narration}</p>
       </div>

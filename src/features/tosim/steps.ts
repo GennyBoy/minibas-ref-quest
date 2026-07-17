@@ -32,6 +32,8 @@ export interface SimStep {
   explanation: string
   /** 前ステップからこのイベントまでの、期待なしイベント（「その間の出来事」表示用） */
   between: SimEvent[]
+  /** セグメント内でこの直前に起きたイベント（between が空のときの文脈表示用） */
+  prev: SimEvent | null
   /** イベント発生直前のショットクロック残りms（null=非表示） */
   shotBeforeMs: number | null
 }
@@ -112,11 +114,13 @@ export function buildSession(script: GameScript, role: ToRole, segment: SimSegme
 
   const steps: SimStep[] = []
   let between: SimEvent[] = []
+  let prev: SimEvent | null = null
   script.events.forEach((e, i) => {
     if (!inSegment(e)) return
     const expect = expectFor(e, role)
     if (!expect) {
       between.push(e)
+      prev = e
       return
     }
     steps.push({
@@ -126,9 +130,11 @@ export function buildSession(script: GameScript, role: ToRole, segment: SimSegme
       expect,
       explanation: expect.explanation,
       between,
+      prev,
       shotBeforeMs: shotBefore[i],
     })
     between = []
+    prev = e
   })
 
   return {

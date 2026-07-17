@@ -440,7 +440,7 @@ export const gameU12Script: GameScript = {
       gameClockMs: 167000,
       type: 'jumpBallSituation',
       narration:
-        '白5番と赤9番がボールを奪い合ってヘルドボール！矢印は赤方向、赤ボールのスローインへ',
+        '赤の攻撃中、ボールを持つ赤9番に白5番が絡んでヘルドボール！矢印は赤方向、赤ボールのスローインへ',
       shot: 'none',
       expect: {
         'sc-operator': {
@@ -1172,7 +1172,7 @@ export const gameU12Script: GameScript = {
       gameClockMs: 330000,
       type: 'foul',
       narration:
-        '白チームの守り方がゾーン気味と判定！マンツーマンペナルティが宣せられた。赤ボールのスローイン',
+        '赤の攻撃中、守る白チームがゾーン気味と判定！マンツーマンペナルティが宣せられた。引き続き赤ボールのスローイン',
       team: 'A',
       shot: 'none',
       expect: {
