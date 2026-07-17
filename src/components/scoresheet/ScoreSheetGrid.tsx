@@ -120,6 +120,35 @@ function playerNoLabel(mark: SheetMark, color: PenColor): ReactNode {
   return <span className={`text-xs font-black ${ink}`}>{mark.playerNo}</span>
 }
 
+/**
+ * 記入マス。トップレベル定義であることが重要:
+ * コンポーネント内で定義すると毎レンダリングで別型と見なされてDOMが作り直され、
+ * ドリルのタイマー再描画（〜100ms間隔）中のタップが失われる。
+ * w-full は button の shrink-to-fit でタップ領域が潰れるのを防ぐ。
+ */
+function Cell({
+  cell,
+  className,
+  readOnly,
+  onCellTap,
+  children,
+}: {
+  cell: CellRef
+  className: string
+  readOnly?: boolean
+  onCellTap?: (cell: CellRef) => void
+  children: ReactNode
+}) {
+  if (readOnly) return <div className={className}>{children}</div>
+  return (
+    <button type="button" onClick={() => onCellTap?.(cell)} className={className}>
+      {children}
+    </button>
+  )
+}
+
+const CELL_BASE = 'flex min-h-11 w-full items-center justify-center'
+
 export default function ScoreSheetGrid({
   fragment,
   marks,
@@ -139,38 +168,19 @@ export default function ScoreSheetGrid({
   const highlightMap = new Map((highlights ?? []).map((h) => [cellKey(h.cell), h.tone]))
   const selectedKey = selectedCell ? cellKey(selectedCell) : null
 
-  function cellCls(cell: CellRef, base: string): string {
+  function cellCls(cell: CellRef): string {
     const key = cellKey(cell)
     const tone = highlightMap.get(key)
     const selected = key === selectedKey
     return [
-      base,
+      CELL_BASE,
       'relative border border-slate-300 bg-white',
       tone ? TONE_CLS[tone] : '',
       selected && !tone ? 'ring-2 ring-orange-500 z-10' : '',
       !readOnly ? 'cursor-pointer active:bg-orange-50' : '',
     ].join(' ')
   }
-
-  function Cell({ cell, children }: { cell: CellRef; children: ReactNode }) {
-    // w-full: button の width:auto は shrink-to-fit のため、空マスだとタップ領域が潰れる
-    if (readOnly) {
-      return (
-        <div className={cellCls(cell, 'flex min-h-11 w-full items-center justify-center')}>
-          {children}
-        </div>
-      )
-    }
-    return (
-      <button
-        type="button"
-        onClick={() => onCellTap?.(cell)}
-        className={cellCls(cell, 'flex min-h-11 w-full items-center justify-center')}
-      >
-        {children}
-      </button>
-    )
-  }
+  const cellProps = { readOnly, onCellTap }
 
   return (
     <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm">
@@ -197,7 +207,7 @@ export default function ScoreSheetGrid({
                     <span key={i}>{playerNoLabel(m.mark, m.color)}</span>
                   ))}
                 </div>
-                <Cell cell={cellA}>
+                <Cell cell={cellA} className={cellCls(cellA)} {...cellProps}>
                   <span className="text-sm text-slate-400">{score}</span>
                   {marksA.map((m, i) => (
                     <MarkGlyph key={i} mark={m.mark} color={m.color} />
@@ -208,7 +218,7 @@ export default function ScoreSheetGrid({
                     </span>
                   )}
                 </Cell>
-                <Cell cell={cellB}>
+                <Cell cell={cellB} className={cellCls(cellB)} {...cellProps}>
                   <span className="text-sm text-slate-400">{score}</span>
                   {marksB.map((m, i) => (
                     <MarkGlyph key={i} mark={m.mark} color={m.color} />
@@ -256,7 +266,7 @@ export default function ScoreSheetGrid({
                 const cellMarks = markMap.get(cellKey(cell)) ?? []
                 return (
                   <div key={slot} className="min-w-11 flex-1">
-                    <Cell cell={cell}>
+                    <Cell cell={cell} className={cellCls(cell)} {...cellProps}>
                       {cellMarks.length === 0 && (
                         <span className="text-xs text-slate-300">{slot}</span>
                       )}
@@ -293,7 +303,7 @@ export default function ScoreSheetGrid({
                 const cellMarks = markMap.get(cellKey(cell)) ?? []
                 return (
                   <div key={slot} className="min-w-11 flex-1">
-                    <Cell cell={cell}>
+                    <Cell cell={cell} className={cellCls(cell)} {...cellProps}>
                       {cellMarks.length === 0 && (
                         <span className="text-xs text-slate-300">{slot}</span>
                       )}
