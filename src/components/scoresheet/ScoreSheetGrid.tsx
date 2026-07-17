@@ -117,7 +117,14 @@ export default function ScoreSheetGrid({
   onCellTap,
   highlights,
 }: ScoreSheetGridProps) {
-  const markMap = new Map(marks.map((m) => [cellKey(m.cell), m]))
+  // 同じマスに複数の記入（例: 最後の得点の／と、その上から囲むQ締めの◯）を重ね描きする
+  const markMap = new Map<string, PlacedMark[]>()
+  for (const m of marks) {
+    const key = cellKey(m.cell)
+    const list = markMap.get(key)
+    if (list) list.push(m)
+    else markMap.set(key, [m])
+  }
   const highlightMap = new Map((highlights ?? []).map((h) => [cellKey(h.cell), h.tone]))
   const selectedKey = selectedCell ? cellKey(selectedCell) : null
 
@@ -165,17 +172,21 @@ export default function ScoreSheetGrid({
           ).map((score) => {
             const cellA: CellRef = { kind: 'score', team: 'A', score }
             const cellB: CellRef = { kind: 'score', team: 'B', score }
-            const markA = markMap.get(cellKey(cellA))
-            const markB = markMap.get(cellKey(cellB))
+            const marksA = markMap.get(cellKey(cellA)) ?? []
+            const marksB = markMap.get(cellKey(cellB)) ?? []
             return (
               <div key={score} className="grid grid-cols-[1fr_1.4fr_1.4fr_1fr]">
                 <div className="flex min-h-11 items-center justify-center border border-slate-200 bg-slate-50">
-                  {markA && playerNoLabel(markA.mark, markA.color)}
+                  {marksA.map((m, i) => (
+                    <span key={i}>{playerNoLabel(m.mark, m.color)}</span>
+                  ))}
                 </div>
                 <Cell cell={cellA}>
                   <span className="text-sm text-slate-400">{score}</span>
-                  {markA && <MarkGlyph mark={markA.mark} color={markA.color} />}
-                  {markA?.mark.symbol === 'ft' && (
+                  {marksA.map((m, i) => (
+                    <MarkGlyph key={i} mark={m.mark} color={m.color} />
+                  ))}
+                  {marksA.some((m) => m.mark.symbol === 'ft') && (
                     <span className="absolute inset-0 z-10 flex items-center justify-center text-xs font-black text-white">
                       {score}
                     </span>
@@ -183,15 +194,19 @@ export default function ScoreSheetGrid({
                 </Cell>
                 <Cell cell={cellB}>
                   <span className="text-sm text-slate-400">{score}</span>
-                  {markB && <MarkGlyph mark={markB.mark} color={markB.color} />}
-                  {markB?.mark.symbol === 'ft' && (
+                  {marksB.map((m, i) => (
+                    <MarkGlyph key={i} mark={m.mark} color={m.color} />
+                  ))}
+                  {marksB.some((m) => m.mark.symbol === 'ft') && (
                     <span className="absolute inset-0 z-10 flex items-center justify-center text-xs font-black text-white">
                       {score}
                     </span>
                   )}
                 </Cell>
                 <div className="flex min-h-11 items-center justify-center border border-slate-200 bg-slate-50">
-                  {markB && playerNoLabel(markB.mark, markB.color)}
+                  {marksB.map((m, i) => (
+                    <span key={i}>{playerNoLabel(m.mark, m.color)}</span>
+                  ))}
                 </div>
               </div>
             )
@@ -221,11 +236,13 @@ export default function ScoreSheetGrid({
                   row: row.label,
                   slot,
                 }
-                const mark = markMap.get(cellKey(cell))
+                const cellMarks = markMap.get(cellKey(cell)) ?? []
                 return (
                   <div key={slot} className="min-w-11 flex-1">
                     <Cell cell={cell}>
-                      {mark && <MarkGlyph mark={mark.mark} color={mark.color} />}
+                      {cellMarks.map((m, i) => (
+                        <MarkGlyph key={i} mark={m.mark} color={m.color} />
+                      ))}
                     </Cell>
                   </div>
                 )
@@ -252,11 +269,13 @@ export default function ScoreSheetGrid({
                   row: row.label,
                   slot,
                 }
-                const mark = markMap.get(cellKey(cell))
+                const cellMarks = markMap.get(cellKey(cell)) ?? []
                 return (
                   <div key={slot} className="min-w-11 flex-1">
                     <Cell cell={cell}>
-                      {mark && <MarkGlyph mark={mark.mark} color={mark.color} />}
+                      {cellMarks.map((m, i) => (
+                        <MarkGlyph key={i} mark={m.mark} color={m.color} />
+                      ))}
                     </Cell>
                   </div>
                 )
