@@ -79,6 +79,17 @@ function MarkGlyph({ mark, color }: { mark: SheetMark; color: PenColor }) {
           {mark.value}
         </span>
       )
+    case 'closeFoulsHalf':
+      // 前半終了: 使用済み枠と未使用枠の間（このマスの左辺）に縦太線
+      return <span className={`absolute -left-px bottom-0 top-0 w-[3px] bg-current ${ink}`} />
+    case 'closeUnused':
+      // 未使用枠の締め: 横線2本
+      return (
+        <span className={ink}>
+          <span className="absolute left-1 right-1 top-[38%] h-[2px] bg-current" />
+          <span className="absolute bottom-[38%] left-1 right-1 h-[2px] bg-current" />
+        </span>
+      )
     default:
       // ファウル記号（P/T/U/C/B/M）＋FT本数の添え字
       return (

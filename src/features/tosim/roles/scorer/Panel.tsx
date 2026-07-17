@@ -43,7 +43,8 @@ export default function ScorerPanel({ step, script, board, pen, setPen, onSubmit
   const complete =
     selectedCell !== null &&
     palette.symbol !== null &&
-    (category !== 'timeout' || palette.value !== null)
+    // タイムアウト枠は経過分が必要（締め線の記入は分なし）
+    (category !== 'timeout' || palette.symbol !== 'timeout' || palette.value !== null)
 
   function switchView(v: ViewId) {
     setView(v)

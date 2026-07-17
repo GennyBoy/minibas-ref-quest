@@ -48,7 +48,21 @@ export function validateSimScript(script: GameScript): string[] {
       continue
     }
     if (curQ === null) {
-      err(e, 'periodStart の前にイベントがある')
+      // Qの外（periodEnd後〜次のperiodStart）に置けるのは締めの記帳（closing）だけ
+      if (e.type !== 'closing') {
+        err(e, lastClosedQIdx === -1 ? 'periodStart の前にイベントがある' : 'periodEnd の後に置けるのは closing だけ')
+        continue
+      }
+      if (quarterIndex(e.quarter) !== lastClosedQIdx) {
+        err(e, `closing の quarter が第${e.quarter}Q（直前に閉じたQと不一致）`)
+      }
+      if (e.gameClockMs !== 0) err(e, `closing の gameClockMs は 0（${e.gameClockMs}）`)
+      if (!e.expect.scorer) err(e, 'closing には scorer の期待が必要')
+      if (e.expect['sc-operator']) err(e, 'closing に SC の期待は置けない')
+      continue
+    }
+    if (e.type === 'closing') {
+      err(e, 'closing は periodEnd の後に置くこと')
       continue
     }
     if (e.quarter !== curQ) err(e, `quarter が ${e.quarter}（現在は第${curQ}Q）`)
@@ -63,8 +77,9 @@ export function validateSimScript(script: GameScript): string[] {
     }
   }
   if (events[0]?.type !== 'periodStart') errors.push(`${script.id}: 先頭は periodStart であること`)
-  if (events.length > 0 && events[events.length - 1].type !== 'periodEnd') {
-    errors.push(`${script.id}: 末尾は periodEnd であること`)
+  const lastType = events[events.length - 1]?.type
+  if (events.length > 0 && lastType !== 'periodEnd' && lastType !== 'closing') {
+    errors.push(`${script.id}: 末尾は periodEnd か closing であること`)
   }
 
   // ショットクロック切れの検出
@@ -89,7 +104,11 @@ export function validateSimScript(script: GameScript): string[] {
   const totals: Record<Team, number> = { A: 0, B: 0 }
   const marks: PlacedMark[] = []
   let arrow: Team | null = null
-  const lastEvent = events[events.length - 1]
+  const finalQ = events[events.length - 1]?.quarter
+  const FOUL_SYMBOLS_SET = new Set(['P', 'T', 'U', 'C', 'B', 'M'])
+  const CLOSING_SYMBOLS_SET = new Set(['closeQ', 'closeGame', 'closeFoulsHalf', 'closeUnused'])
+  /** ファウル枠の位置は締め線を除いたファウル記号だけで数える（線と後半のPは同じ枠に同居する） */
+  const foulMarksOnly = () => marks.filter((pm) => FOUL_SYMBOLS_SET.has(pm.mark.symbol))
   for (const e of events) {
     if ((e.type === 'fieldGoal' || e.type === 'freeThrow') && e.points !== undefined && e.team) {
       totals[e.team] += e.points
@@ -126,12 +145,28 @@ export function validateSimScript(script: GameScript): string[] {
     const m = ex.mark
     const pen = penColorForQuarter(e.quarter)
     if (m.color !== pen) err(e, `ペンの色が ${m.color}（第${e.quarter}Qは ${pen}）`)
+    // 締め記号は closing（または periodEnd）だけ、closing には締め記号だけ
+    const isClosingSymbol = CLOSING_SYMBOLS_SET.has(m.mark.symbol)
+    if (isClosingSymbol && e.type !== 'closing' && e.type !== 'periodEnd') {
+      err(e, `締めの記号 ${m.mark.symbol} は closing イベントに置くこと`)
+    }
+    if (e.type === 'closing' && !isClosingSymbol) {
+      err(e, `closing の記号が ${m.mark.symbol}（締めの記号を使うこと）`)
+    }
+    if (m.mark.symbol === 'closeGame' && e.quarter !== finalQ) {
+      err(e, 'closeGame は最終Qの締めにだけ置くこと')
+    }
+    if (m.mark.symbol === 'closeQ' && e.quarter === finalQ) {
+      err(e, '最終Qの得点の締めは closeGame（太線2本）')
+    }
+    if (m.mark.symbol === 'closeFoulsHalf' && e.quarter !== 2) {
+      err(e, 'closeFoulsHalf（仕切り線）は前半終了（第2Qの締め）にだけ置くこと')
+    }
+    if (m.mark.symbol === 'closeUnused' && e.quarter !== finalQ) {
+      err(e, 'closeUnused（未使用枠の締め）はゲーム終了の締めにだけ置くこと')
+    }
     if (m.cell.kind === 'score') {
       if (m.mark.symbol === 'closeQ' || m.mark.symbol === 'closeGame') {
-        if (e.type !== 'periodEnd') err(e, '締めの記入は periodEnd に置くこと')
-        if (m.mark.symbol === 'closeGame' && e !== lastEvent) {
-          err(e, 'closeGame は最終イベントにだけ置くこと')
-        }
         if (m.cell.score !== totals[m.cell.team]) {
           err(e, `締めのセルが ${m.cell.score}点目（${m.cell.team}の累計は ${totals[m.cell.team]}）`)
         }
@@ -159,17 +194,31 @@ export function validateSimScript(script: GameScript): string[] {
       if (m.cell.row !== 'HC' && e.playerNo !== undefined && m.cell.row !== String(e.playerNo)) {
         err(e, `ファウル行 ${m.cell.row} がイベントの背番号 ${e.playerNo} と不一致`)
       }
-      const slot = nextFoulSlot(marks, m.cell.team, m.cell.row)
+      // ファウル記号も締め線も「その行の最初の未使用枠」に置く
+      const slot = nextFoulSlot(foulMarksOnly(), m.cell.team, m.cell.row)
       if (m.cell.slot !== slot) {
         err(e, `ファウル枠が slot${m.cell.slot}（累積から導くと slot${slot}）`)
       }
     }
     if (m.cell.kind === 'timeout') {
-      if (e.team !== m.cell.team) {
-        err(e, `タイムアウトセルのチームがイベントと不一致（${m.cell.team}）`)
+      const cell = m.cell
+      if (e.team !== cell.team) {
+        err(e, `タイムアウトセルのチームがイベントと不一致（${cell.team}）`)
       }
-      const min = timeoutMinute(script.quarterMs / 60000, Math.round(e.gameClockMs / 1000))
-      if (m.mark.value !== min) err(e, `経過分が ${m.mark.value}（計算では ${min}）`)
+      if (m.mark.symbol === 'timeout') {
+        const min = timeoutMinute(script.quarterMs / 60000, Math.round(e.gameClockMs / 1000))
+        if (m.mark.value !== min) err(e, `経過分が ${m.mark.value}（計算では ${min}）`)
+      }
+      if (m.mark.symbol === 'closeUnused') {
+        const used = marks.some(
+          (pm) =>
+            pm.mark.symbol === 'timeout' &&
+            pm.cell.kind === 'timeout' &&
+            pm.cell.team === cell.team &&
+            pm.cell.row === cell.row,
+        )
+        if (used) err(e, '使用済みのタイムアウト枠に未使用の締めを置いている')
+      }
     }
     marks.push(m)
   }

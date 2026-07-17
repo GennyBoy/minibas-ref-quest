@@ -52,8 +52,8 @@ console.log(`OK: ドリル sheet ${sheetTasks.length}お題（記入ルールの
 const simErrors: string[] = []
 for (const s of gameScripts) {
   simErrors.push(...validateSimScript(s).map((e) => `${s.id} ${e}`))
-  if (s.events.length < 60 || s.events.length > 110) {
-    simErrors.push(`${s.id}: イベント数が${s.events.length}（1試合分=60〜110が目安）`)
+  if (s.events.length < 60 || s.events.length > 120) {
+    simErrors.push(`${s.id}: イベント数が${s.events.length}（1試合分=60〜120が目安）`)
   }
   // 記入ルールのカバレッジ（U12対象の全記号・SC全アクション・アロー操作を1試合で通ること）
   if (s.ruleset === 'u12') {

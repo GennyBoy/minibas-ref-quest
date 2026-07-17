@@ -23,13 +23,55 @@ describe('validateSimScript', () => {
     }
   })
 
-  it('periodStart で始まり periodEnd（残り0）で終わる', () => {
+  it('periodStart で始まり、末尾は締めの記帳（残り0）で終わる', () => {
     const first = gameU12Script.events[0]
     const last = gameU12Script.events[gameU12Script.events.length - 1]
     expect(first.type).toBe('periodStart')
     expect(first.gameClockMs).toBe(gameU12Script.quarterMs)
-    expect(last.type).toBe('periodEnd')
+    expect(last.type).toBe('closing')
     expect(last.gameClockMs).toBe(0)
+  })
+
+  it('periodEnd の後に closing 以外を置くと検出する', () => {
+    const s = broken((s) => {
+      const i = s.events.findIndex((e) => e.type === 'periodEnd')
+      const bad = structuredClone(s.events[i - 1]) // Q内の通常イベントを複製
+      bad.id = 'ev-095'
+      bad.gameClockMs = 0
+      s.events.splice(i + 1, 0, bad)
+    })
+    expect(validateSimScript(s).some((e) => e.includes('closing だけ'))).toBe(true)
+  })
+
+  it('closing の締め線の枠飛ばしを検出する', () => {
+    const s = broken((s) => {
+      const ev = findEvent(s, (e) => {
+        const ex = e.expect.scorer
+        return (
+          e.type === 'closing' && ex?.kind === 'mark' && ex.mark.mark.symbol === 'closeFoulsHalf'
+        )
+      })
+      const ex = ev.expect.scorer
+      if (ex?.kind === 'mark' && ex.mark.cell.kind === 'foul') ex.mark.cell.slot = 5
+    })
+    expect(validateSimScript(s).some((e) => e.includes('ファウル枠'))).toBe(true)
+  })
+
+  it('使用済みタイムアウト枠への未使用締めを検出する', () => {
+    const s = broken((s) => {
+      const ev = findEvent(s, (e) => {
+        const ex = e.expect.scorer
+        return (
+          ex?.kind === 'mark' &&
+          ex.mark.mark.symbol === 'closeUnused' &&
+          ex.mark.cell.kind === 'timeout' &&
+          ex.mark.cell.team === 'A'
+        )
+      })
+      const ex = ev.expect.scorer
+      if (ex?.kind === 'mark' && ex.mark.cell.kind === 'timeout') ex.mark.cell.row = '第1Q' // 白が使用済み
+    })
+    expect(validateSimScript(s).some((e) => e.includes('使用済みのタイムアウト枠'))).toBe(true)
   })
 
   it('Q内でゲームクロックが増えたら検出する', () => {
@@ -112,20 +154,19 @@ describe('validateSimScript', () => {
     expect(validateSimScript(s).some((e) => e.includes('ペンの色'))).toBe(true)
   })
 
-  it('closeGame は最終イベント以外に置けない', () => {
+  it('closeGame は最終Q以外の締めに置けない', () => {
     const s = broken((s) => {
-      // 第1Qの periodEnd（現状は最終だが、後ろにダミーQを足して非最終にする）
-      const ex = s.events[s.events.length - 1].expect.scorer
+      const ev = findEvent(s, (e) => {
+        const ex = e.expect.scorer
+        return (
+          e.type === 'closing' &&
+          e.quarter === 1 &&
+          ex?.kind === 'mark' &&
+          ex.mark.mark.symbol === 'closeQ'
+        )
+      })
+      const ex = ev.expect.scorer
       if (ex?.kind === 'mark') ex.mark.mark.symbol = 'closeGame'
-      const start = structuredClone(s.events[0])
-      start.id = 'ev-091'
-      start.quarter = 2
-      start.expect = {}
-      const end = structuredClone(s.events[s.events.length - 1])
-      end.id = 'ev-092'
-      end.quarter = 2
-      end.expect = {}
-      s.events.push(start, end)
     })
     expect(validateSimScript(s).some((e) => e.includes('closeGame'))).toBe(true)
   })

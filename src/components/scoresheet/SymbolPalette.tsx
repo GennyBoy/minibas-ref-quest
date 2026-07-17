@@ -32,6 +32,12 @@ const CLOSING_SYMBOLS: { symbol: SheetSymbol; glyph: string; label: string }[] =
   { symbol: 'closeGame', glyph: '◯＋太線2本', label: 'ゲーム終了の締め' },
 ]
 
+/** ファウル欄・タイムアウト欄の締め線（前半終了・ゲーム終了の記帳） */
+const SEAL_SYMBOLS: { symbol: SheetSymbol; glyph: string; label: string }[] = [
+  { symbol: 'closeFoulsHalf', glyph: '｜', label: '仕切り線（前半終了）' },
+  { symbol: 'closeUnused', glyph: '＝', label: '未使用枠の締め' },
+]
+
 function OptionButton({
   active,
   onClick,
@@ -67,18 +73,32 @@ export default function SymbolPalette({
 }) {
   if (category === 'timeout') {
     return (
-      <div>
-        <p className="mb-1 text-xs font-bold text-slate-500">経過時間（分）を選ぶ</p>
-        <div className="grid grid-cols-5 gap-1.5">
-          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+      <div className="space-y-2">
+        <div>
+          <p className="mb-1 text-xs font-bold text-slate-500">経過時間（分）を選ぶ</p>
+          <div className="grid grid-cols-5 gap-1.5">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <OptionButton
+                key={n}
+                active={value.symbol === 'timeout' && value.value === n}
+                onClick={() => onChange({ symbol: 'timeout', subscript: null, value: n })}
+              >
+                <span className="text-lg font-black">{n}</span>
+              </OptionButton>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className="mb-1 text-xs font-bold text-slate-500">またはゲーム終了の締め</p>
+          <div className="grid grid-cols-2 gap-1.5">
             <OptionButton
-              key={n}
-              active={value.value === n}
-              onClick={() => onChange({ symbol: 'timeout', subscript: null, value: n })}
+              active={value.symbol === 'closeUnused'}
+              onClick={() => onChange({ symbol: 'closeUnused', subscript: null, value: null })}
             >
-              <span className="text-lg font-black">{n}</span>
+              <span className="block text-lg font-black leading-none">＝</span>
+              <span className="text-[10px] font-bold">未使用枠の締め</span>
             </OptionButton>
-          ))}
+          </div>
         </div>
       </div>
     )
@@ -156,6 +176,21 @@ export default function SymbolPalette({
               onClick={() => onChange({ ...value, subscript: n, value: null })}
             >
               <span className="text-sm font-black">{n === null ? 'なし' : `${n}本`}</span>
+            </OptionButton>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="mb-1 text-xs font-bold text-slate-500">または締め線（前半・ゲーム終了）</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {SEAL_SYMBOLS.map((o) => (
+            <OptionButton
+              key={o.symbol}
+              active={value.symbol === o.symbol}
+              onClick={() => onChange({ symbol: o.symbol, subscript: null, value: null })}
+            >
+              <span className="block text-lg font-black leading-none">{o.glyph}</span>
+              <span className="text-[10px] font-bold">{o.label}</span>
             </OptionButton>
           ))}
         </div>

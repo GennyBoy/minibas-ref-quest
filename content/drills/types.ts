@@ -89,6 +89,8 @@ export type Team = z.infer<typeof teamSchema>
  * 記入記号。ft=●(FT1点) fg=／(FG2点) fg3=／+番号○囲み(一般3点)
  * ownGoal=▲(U12オウンゴール) P/T/U/C/B/M=ファウル
  * timeout=経過分数 closeQ=Q終了の締め(太線1本) closeGame=ゲーム終了の締め(太線2本)
+ * closeFoulsHalf=前半終了のファウル欄仕切り線(使用済み/未使用の間の縦太線)
+ * closeUnused=未使用枠の締め(横線2本。ファウル枠・タイムアウト枠)
  */
 export const SHEET_SYMBOLS = [
   'ft',
@@ -104,6 +106,8 @@ export const SHEET_SYMBOLS = [
   'timeout',
   'closeQ',
   'closeGame',
+  'closeFoulsHalf',
+  'closeUnused',
 ] as const
 export const sheetSymbolSchema = z.enum(SHEET_SYMBOLS)
 export type SheetSymbol = z.infer<typeof sheetSymbolSchema>
@@ -122,6 +126,8 @@ export const SHEET_SYMBOL_LABELS: Record<SheetSymbol, string> = {
   timeout: 'タイムアウト（経過分）',
   closeQ: 'Q終了の締め（太線1本）',
   closeGame: 'ゲーム終了の締め（太線2本）',
+  closeFoulsHalf: '前半の仕切り線（使用済みとの間に縦太線）',
+  closeUnused: '未使用枠の締め（横線2本）',
 }
 
 export const cellRefSchema = z.discriminatedUnion('kind', [

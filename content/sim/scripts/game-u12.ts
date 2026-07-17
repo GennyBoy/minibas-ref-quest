@@ -674,8 +674,19 @@ export const gameU12Script: GameScript = {
       quarter: 1,
       gameClockMs: 0,
       type: 'periodEnd',
-      narration: 'ブザーが鳴って第1Q終了！12対12の同点',
+      narration: 'ブザーが鳴って第1Q終了！12対12の同点。Q終わりの記帳をしよう',
       shot: 'hide',
+      expect: {},
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-101',
+      quarter: 1,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '第1Qの記帳①: まず白チームの最後の得点を締める',
+      team: 'A',
+      shot: 'none',
       expect: {
         scorer: {
           kind: 'mark',
@@ -685,7 +696,29 @@ export const gameU12Script: GameScript = {
             color: 'red',
           },
           explanation:
-            'Q終了はそのQのペン（第1Q=赤）で、最後の得点（白の12点目）を太い○で囲み、すぐ下に太い横線を1本引く。',
+            'Q終了はそのQのペン（第1Q=赤）で、各チームの最後の得点を太い○で囲み、すぐ下に太い横線を1本引く。白の最後の得点は12点目。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-102',
+      quarter: 1,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '第1Qの記帳②: 赤チームの最後の得点も締める',
+      team: 'B',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'score', team: 'B', score: 12 },
+            mark: { symbol: 'closeQ' },
+            color: 'red',
+          },
+          explanation:
+            '締めは両チームそれぞれの最後の得点に行う。赤の最後の得点も12点目なので、同じく○＋太線1本。赤ペンのまま。',
         },
       },
       refs: ['knowledge/08-to-scoresheet'],
@@ -1100,8 +1133,19 @@ export const gameU12Script: GameScript = {
       quarter: 2,
       gameClockMs: 0,
       type: 'periodEnd',
-      narration: '前半終了のブザー！19対20で赤リード',
+      narration: '前半終了のブザー！19対20で赤リード。前半の記帳はファウル欄の仕切り線まで',
       shot: 'hide',
+      expect: {},
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-103',
+      quarter: 2,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '前半の記帳①: 白チームの最後の得点を締める',
+      team: 'A',
+      shot: 'none',
       expect: {
         scorer: {
           kind: 'mark',
@@ -1111,7 +1155,72 @@ export const gameU12Script: GameScript = {
             color: 'dark',
           },
           explanation:
-            '第2Qの締めは濃色ペン。最後の得点（白の19点目）を太い○で囲み、下に太い横線1本。',
+            '第2Qの締めは濃色ペン。白の最後の得点（19点目）を太い○で囲み、下に太い横線1本。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-104',
+      quarter: 2,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '前半の記帳②: 赤チームの最後の得点も締める',
+      team: 'B',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'score', team: 'B', score: 20 },
+            mark: { symbol: 'closeQ' },
+            color: 'dark',
+          },
+          explanation: '赤の最後の得点（20点目）も○＋太線1本。濃色ペンのまま。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-105',
+      quarter: 2,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '前半の記帳③: 白のファウル欄に仕切り線を引く（代表: 8番の行）',
+      team: 'A',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'foul', team: 'A', row: '8', slot: 2 },
+            mark: { symbol: 'closeFoulsHalf' },
+            color: 'dark',
+          },
+          explanation:
+            '前半終了時は、使用済みと未使用のファウル枠の間に濃色の太線を引く。白8番は1個使用済みなので枠1と枠2の間（枠2の左辺）。実際は全プレーヤーとHCの行に同じように引く（ここでは代表1行）。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-106',
+      quarter: 2,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '前半の記帳④: 赤のファウル欄にも仕切り線（代表: 4番の行）',
+      team: 'B',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'foul', team: 'B', row: '4', slot: 2 },
+            mark: { symbol: 'closeFoulsHalf' },
+            color: 'dark',
+          },
+          explanation:
+            '赤4番も1個使用済みなので枠1と枠2の間に濃色の太線。後半のファウルはこの線の右側の枠に書いていく。',
         },
       },
       refs: ['knowledge/08-to-scoresheet'],
@@ -1578,8 +1687,19 @@ export const gameU12Script: GameScript = {
       quarter: 3,
       gameClockMs: 0,
       type: 'periodEnd',
-      narration: '第3Q終了！27対29、赤が2点リードで最終Qへ',
+      narration: '第3Q終了！27対29、赤が2点リードで最終Qへ。Q終わりの記帳をしよう',
       shot: 'hide',
+      expect: {},
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-107',
+      quarter: 3,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '第3Qの記帳①: 白チームの最後の得点を締める',
+      team: 'A',
+      shot: 'none',
       expect: {
         scorer: {
           kind: 'mark',
@@ -1589,7 +1709,28 @@ export const gameU12Script: GameScript = {
             color: 'red',
           },
           explanation:
-            '第3Qの締めは赤ペン。最後の得点（白の27点目）を太い○で囲み、下に太い横線1本。',
+            '第3Qの締めは赤ペン。白の最後の得点（27点目）を太い○で囲み、下に太い横線1本。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-108',
+      quarter: 3,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '第3Qの記帳②: 赤チームの最後の得点も締める',
+      team: 'B',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'score', team: 'B', score: 29 },
+            mark: { symbol: 'closeQ' },
+            color: 'red',
+          },
+          explanation: '赤の最後の得点（29点目）も○＋太線1本。赤ペンのまま。',
         },
       },
       refs: ['knowledge/08-to-scoresheet'],
@@ -2033,8 +2174,19 @@ export const gameU12Script: GameScript = {
       quarter: 4,
       gameClockMs: 0,
       type: 'periodEnd',
-      narration: '試合終了のブザー！37対34、白チームの勝利！',
+      narration: '試合終了のブザー！37対34、白チームの勝利！最後の記帳で試合を締めよう',
       shot: 'hide',
+      expect: {},
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-109',
+      quarter: 4,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '試合終了の記帳①: 白チームの最後の得点をゲームの締めで囲む',
+      team: 'A',
+      shot: 'none',
       expect: {
         scorer: {
           kind: 'mark',
@@ -2044,7 +2196,115 @@ export const gameU12Script: GameScript = {
             color: 'dark',
           },
           explanation:
-            'ゲーム終了は最後の得点（白の37点目）を太い○で囲み、太い横線を2本。未使用のランニングスコア列に斜線、最終スコア・勝者・終了時刻も記入する。濃色ペン。',
+            'ゲーム終了は各チームの最後の得点を太い○で囲み、太い横線を2本引く。白の最後は37点目。濃色ペン。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-110',
+      quarter: 4,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '試合終了の記帳②: 赤チームの最後の得点も締める',
+      team: 'B',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'score', team: 'B', score: 34 },
+            mark: { symbol: 'closeGame' },
+            color: 'dark',
+          },
+          explanation: '赤の最後の得点（34点目）も○＋太線2本で締める。濃色ペン。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-111',
+      quarter: 4,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '試合終了の記帳③: 白の未使用ファウル枠を締める（代表: 5番の行）',
+      team: 'A',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'foul', team: 'A', row: '5', slot: 1 },
+            mark: { symbol: 'closeUnused' },
+            color: 'dark',
+          },
+          explanation:
+            'ゲーム終了時は未使用のファウル枠に横線2本を引く。白5番はファウルなしなので枠1から。実際は全プレーヤーの未使用枠すべてに引く（ここでは代表1行）。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-112',
+      quarter: 4,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '試合終了の記帳④: 赤の未使用ファウル枠も締める（代表: 11番の行）',
+      team: 'B',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'foul', team: 'B', row: '11', slot: 1 },
+            mark: { symbol: 'closeUnused' },
+            color: 'dark',
+          },
+          explanation: '赤11番もファウルなし。未使用の枠に横線2本（濃色ペン）。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-113',
+      quarter: 4,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '試合終了の記帳⑤: 白の未使用タイムアウト枠を締める（第2Q枠）',
+      team: 'A',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'timeout', team: 'A', row: '第2Q', slot: 1 },
+            mark: { symbol: 'closeUnused' },
+            color: 'dark',
+          },
+          explanation:
+            '未使用のタイムアウト枠にも横線2本。白は第1Q・第4Qを使ったので、第2Q・第3Qの枠を締める（ここでは代表で第2Q枠）。',
+        },
+      },
+      refs: ['knowledge/08-to-scoresheet'],
+    },
+    {
+      id: 'ev-114',
+      quarter: 4,
+      gameClockMs: 0,
+      type: 'closing',
+      narration: '試合終了の記帳⑥: 赤の未使用タイムアウト枠も締める（第1Q枠）',
+      team: 'B',
+      shot: 'none',
+      expect: {
+        scorer: {
+          kind: 'mark',
+          mark: {
+            cell: { kind: 'timeout', team: 'B', row: '第1Q', slot: 1 },
+            mark: { symbol: 'closeUnused' },
+            color: 'dark',
+          },
+          explanation:
+            '赤は第2Qしか使っていないので、残りの枠に横線2本。仕上げに未使用のランニングスコア列へ斜線を引き、最終スコア・勝者・終了時刻を記入してスコアシートが完成する。',
         },
       },
       refs: ['knowledge/08-to-scoresheet'],

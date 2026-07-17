@@ -33,6 +33,14 @@ describe('foldShotClock', () => {
 })
 
 describe('buildSession', () => {
+  it('締めの記帳（closing）はスコアラーのステップになり、SCでは between になる', () => {
+    const scorer = buildSession(gameU12Script, 'scorer', 1)
+    const closings = scorer.steps.filter((s) => s.event.type === 'closing')
+    expect(closings.length).toBe(2) // 白・赤の得点の締め
+    const sc = buildSession(gameU12Script, 'sc-operator', 1)
+    expect(sc.steps.some((s) => s.event.type === 'closing')).toBe(false)
+  })
+
   it('役割の期待があるイベントだけがステップになる', () => {
     const sc = buildSession(gameU12Script, 'sc-operator', 'full')
     const scorer = buildSession(gameU12Script, 'scorer', 'full')

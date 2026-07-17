@@ -26,6 +26,7 @@ export const SIM_EVENT_TYPES = [
   'throwIn',
   'play',
   'periodEnd',
+  'closing',
 ] as const
 export const simEventTypeSchema = z.enum(SIM_EVENT_TYPES)
 export type SimEventType = z.infer<typeof simEventTypeSchema>
@@ -45,6 +46,7 @@ export const SIM_EVENT_TYPE_LABELS: Record<SimEventType, string> = {
   throwIn: 'スローイン',
   play: '経過',
   periodEnd: 'ピリオド終了',
+  closing: '締めの記帳',
 }
 
 /** SCオペレーターの操作（keep は「触らない＝継続」の判断） */
